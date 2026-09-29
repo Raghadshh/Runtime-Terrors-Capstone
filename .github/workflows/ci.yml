@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [devs, main]
+  push:
+    branches: [devs, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run backend checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -d backend ]] || [[ -z "$(find backend -type f ! -name README.md -print -quit)" ]]; then
+            echo "Backend code is not here yet."
+            exit 0
+          fi
+          if [[ ! -f backend/ci.sh ]]; then
+            echo "::error::Add backend/ci.sh with install, test, and build checks."
+            exit 1
+          fi
+          bash backend/ci.sh
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Node.js for the Expo app
+        if: ${{ hashFiles('frontend/package.json') != '' }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Run frontend checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f frontend/package.json ]]; then
+            echo "The Expo app is not here yet."
+            exit 0
+          fi
+          if [[ ! -f frontend/ci.sh ]]; then
+            echo "::error::Add frontend/ci.sh with install, test, and build checks."
+            exit 1
+          fi
+          bash frontend/ci.sh

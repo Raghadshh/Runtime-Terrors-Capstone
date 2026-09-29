@@ -1,6 +1,6 @@
 # Runtime-Terrors-Capstone
 
-Capstone project focused on building a routine, task, habit tracking.
+Capstone project for a routine, task, and habit tracking app called RemindME.
 
 ## Team
 - Raghad Shaheen
@@ -24,3 +24,8 @@ Capstone project focused on building a routine, task, habit tracking.
 6. After features in `devs` are tested create a Pull Request from `devs` into `main`.
 7. `main` requires approval from at least one teammate before merging
 
+## CI/CD
+
+CI means GitHub checks our code after we push it or open a PR.
+
+Our [CI workflow](.github/workflows/ci.yml) checks the frontend and backend on PRs into `devs` and `main`. The frontend starter has a TypeScript check. We will add feature tests as we write code. The backend check waits until we choose a backend.
