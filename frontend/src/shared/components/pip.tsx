@@ -3,7 +3,7 @@
  */
 import { SvgXml } from "react-native-svg";
 
-import { illustrationXml } from "@/assets/illustrations";
+import { illustrationXml } from "@assets/illustration";
 
 export function Meadow() {
   return <SvgXml xml={illustrationXml.meadow} />;
