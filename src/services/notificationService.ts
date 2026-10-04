@@ -11,10 +11,7 @@ export const scheduleTaskNotification = async (
       body: `It's time for: ${title}`,
       data: { taskId },
     },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DATE,
-      date: triggerDate,
-    },
+    trigger: triggerDate,
   });
 
   return notificationId;
