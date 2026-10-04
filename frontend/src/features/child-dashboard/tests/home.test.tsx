@@ -1,7 +1,8 @@
+import { Alert } from "react-native";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import HomeScreen from "../home";
-import { useMine } from "@/lib/store";
+import { useMine } from "@/lib/dashboard";
 import { useRouter } from "expo-router";
 
 // Mock Expo Router
@@ -10,8 +11,9 @@ jest.mock("expo-router", () => ({
 }));
 
 // Mock the Zustand state store
-jest.mock("@/lib/store", () => ({
+jest.mock("@/lib/dashboard", () => ({
   useMine: jest.fn(),
+  useRemind: jest.fn(() => ({ session: { theme: "cream" }, syncNote: null })),
 }));
 
 describe("HomeScreen Component", () => {
@@ -19,6 +21,7 @@ describe("HomeScreen Component", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Alert, "alert").mockImplementation(() => {});
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
   });
 
@@ -39,8 +42,8 @@ describe("HomeScreen Component", () => {
       });
     });
 
-    it("renders parent greeting and selected child info", () => {
-      render(<HomeScreen />);
+    it("renders parent greeting and selected child info", async () => {
+      await render(<HomeScreen />);
 
       expect(screen.getByText("Jamie")).toBeTruthy();
       expect(screen.getByText("SELECTED CHILD")).toBeTruthy();
@@ -48,20 +51,21 @@ describe("HomeScreen Component", () => {
       expect(screen.getByText("7 years old")).toBeTruthy();
     });
 
-    it("calculates today's progress correctly", () => {
-      render(<HomeScreen />);
+    it("calculates today's progress correctly", async () => {
+      await render(<HomeScreen />);
 
       expect(screen.getByText("1 of 2 tasks complete")).toBeTruthy();
       expect(screen.getByText("50%")).toBeTruthy();
     });
 
-    it("navigates to create task screen when '+ Add Task' button is pressed", () => {
-      render(<HomeScreen />);
+    it("shows availability message for create task when '+ Add Task' button is pressed", async () => {
+      await render(<HomeScreen />);
 
       const addTaskButton = screen.getByText("+ Add Task");
-      fireEvent.press(addTaskButton);
+      await fireEvent.press(addTaskButton);
 
-      expect(mockPush).toHaveBeenCalledWith("/tasks/new");
+      expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
+      expect(mockPush).not.toHaveBeenCalled();
     });
   });
 
@@ -79,8 +83,8 @@ describe("HomeScreen Component", () => {
       });
     });
 
-    it("renders independent user view with motivational message", () => {
-      render(<HomeScreen />);
+    it("renders independent user view with motivational message", async () => {
+      await render(<HomeScreen />);
 
       expect(screen.getByText("Alex")).toBeTruthy();
       expect(screen.getByText("You've got this!")).toBeTruthy();
@@ -88,13 +92,14 @@ describe("HomeScreen Component", () => {
       expect(screen.getByText("Read Book")).toBeTruthy();
     });
 
-    it("navigates to all tasks when 'View all' is pressed", () => {
-      render(<HomeScreen />);
+    it("shows availability message for tasks when 'View all' is pressed", async () => {
+      await render(<HomeScreen />);
 
       const viewAllButton = screen.getByText("View all");
-      fireEvent.press(viewAllButton);
+      await fireEvent.press(viewAllButton);
 
-      expect(mockPush).toHaveBeenCalledWith("/tasks");
+      expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
+      expect(mockPush).not.toHaveBeenCalled();
     });
   });
 });

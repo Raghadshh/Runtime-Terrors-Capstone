@@ -3,3 +3,4 @@ set -euo pipefail
 
 npm ci --prefix frontend
 npm run typecheck --prefix frontend
+npm test --prefix frontend

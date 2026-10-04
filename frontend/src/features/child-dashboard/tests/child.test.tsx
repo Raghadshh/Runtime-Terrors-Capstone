@@ -1,15 +1,17 @@
+import { Alert } from "react-native";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import ChildDashboardScreen from "../child";
-import { useMine } from "@/lib/store";
+import { useMine } from "@/lib/dashboard";
 import { useRouter } from "expo-router";
 
 jest.mock("expo-router", () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock("@/lib/store", () => ({
+jest.mock("@/lib/dashboard", () => ({
   useMine: jest.fn(),
+  useRemind: jest.fn(() => ({ session: { theme: "cream" }, syncNote: null })),
 }));
 
 describe("ChildDashboardScreen Component", () => {
@@ -17,6 +19,7 @@ describe("ChildDashboardScreen Component", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Alert, "alert").mockImplementation(() => {});
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
 
     (useMine as jest.Mock).mockReturnValue({
@@ -37,36 +40,38 @@ describe("ChildDashboardScreen Component", () => {
     });
   });
 
-  it("renders personal greeting and task summary", () => {
-    render(<ChildDashboardScreen />);
+  it("renders personal greeting and task summary", async () => {
+    await render(<ChildDashboardScreen />);
 
     expect(screen.getByText("Good morning, Sam!")).toBeTruthy();
     expect(screen.getByText("You have 1 small wins waiting.")).toBeTruthy();
     expect(screen.getByText("1 of 2")).toBeTruthy();
   });
 
-  it("displays points and points needed for next reward", () => {
-    render(<ChildDashboardScreen />);
+  it("displays points and points needed for next reward", async () => {
+    await render(<ChildDashboardScreen />);
 
     expect(screen.getByText("★ 40")).toBeTruthy();
     expect(screen.getByText("10 points away")).toBeTruthy();
   });
 
-  it("navigates to task details when an open task card is tapped", () => {
-    render(<ChildDashboardScreen />);
+  it("shows availability message for task details when an open task card is tapped", async () => {
+    await render(<ChildDashboardScreen />);
 
     const taskCard = screen.getByText("Pack Backpack");
-    fireEvent.press(taskCard);
+    await fireEvent.press(taskCard);
 
-    expect(mockPush).toHaveBeenCalledWith("/tasks/t1");
+    expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
+      expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("navigates to routine details when routine card is pressed", () => {
-    render(<ChildDashboardScreen />);
+  it("shows availability message for routine details when routine card is pressed", async () => {
+    await render(<ChildDashboardScreen />);
 
     const routineCard = screen.getByText("Morning Routine");
-    fireEvent.press(routineCard);
+    await fireEvent.press(routineCard);
 
-    expect(mockPush).toHaveBeenCalledWith("/routines/r1");
+    expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
+      expect(mockPush).not.toHaveBeenCalled();
   });
 });

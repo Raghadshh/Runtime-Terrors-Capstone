@@ -67,3 +67,12 @@ export const illustrationXml = {
 </svg>
 `,
 } as const;
+
+export const dashboardArt = {
+  bighill: "<svg width=\"357\" height=\"91\" viewBox=\"0 0 357 91\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M0 29.5298C32 -2.82293 66.3333 -5.7886 103 20.6328C139.667 47.0542 174.667 46.7846 208 19.824C241.333 -7.13663 291 -6.59742 357 21.4416V91H0V29.5298Z\" fill=\"#A8D5A2\"/>\n</svg>\n",
+  smallhill: "<svg width=\"357\" height=\"42\" viewBox=\"0 0 357 42\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path opacity=\"0.75\" d=\"M6 20.4331C32.6667 -6.81103 62.3333 -6.81103 95 20.4331C127.667 47.6772 159.667 47.6772 191 20.4331C222.333 -6.81103 252.333 -6.81103 281 20.4331C309.667 47.6772 335 47.6772 357 20.4331V41.8392H0L6 20.4331Z\" fill=\"#A8D5A2\"/>\n</svg>\n",
+  cloud: "<svg width=\"81\" height=\"48\" viewBox=\"0 0 81 48\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<g opacity=\"0.82\">\n<path d=\"M18 48C27.9411 48 36 39.9411 36 30C36 20.0589 27.9411 12 18 12C8.05887 12 0 20.0589 0 30C0 39.9411 8.05887 48 18 48Z\" fill=\"white\"/>\n<path d=\"M40 46C52.7025 46 63 35.7025 63 23C63 10.2975 52.7025 0 40 0C27.2975 0 17 10.2975 17 23C17 35.7025 27.2975 46 40 46Z\" fill=\"white\"/>\n<path d=\"M65 47C73.8366 47 81 39.8366 81 31C81 22.1634 73.8366 15 65 15C56.1634 15 49 22.1634 49 31C49 39.8366 56.1634 47 65 47Z\" fill=\"white\"/>\n</g>\n</svg>\n",
+  star: "<svg width=\"28\" height=\"27\" viewBox=\"0 0 28 27\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M14 0L18 9L28 10L20 17L22 27L14 22L5 27L7 17L0 10L10 9L14 0Z\" fill=\"#FFD66B\"/>\n</svg>\n",
+  leaf: "<svg width=\"34\" height=\"50\" viewBox=\"0 0 34 50\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M23 50C23 27 15 11 0 0C1 21 8 37 23 50ZM16 31C30 27 36 18 33 5C20 10 14 18 16 31Z\" fill=\"#65A878\"/>\n</svg>\n",
+  leaf2: "<svg width=\"36\" height=\"53\" viewBox=\"0 0 36 53\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M10.75 53C9.75 28 18.75 11 35.75 0C34.75 22 25.75 39 10.75 53ZM18.75 33C3.75 28 -2.25 19 0.75 5C14.75 10 21.75 19 18.75 33Z\" fill=\"#65A878\"/>\n</svg>\n",
+} as const;

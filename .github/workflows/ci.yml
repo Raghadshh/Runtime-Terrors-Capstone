@@ -11,26 +11,6 @@ permissions:
   contents: read
 
 jobs:
-  backend:
-    name: Backend
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v6
-      - name: Run backend checks
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ ! -d backend ]] || [[ -z "$(find backend -type f ! -name README.md -print -quit)" ]]; then
-            echo "Backend code is not here yet."
-            exit 0
-          fi
-          if [[ ! -f backend/ci.sh ]]; then
-            echo "::error::Add backend/ci.sh with install, test, and build checks."
-            exit 1
-          fi
-          bash backend/ci.sh
-
   frontend:
     name: Frontend
     runs-on: ubuntu-latest

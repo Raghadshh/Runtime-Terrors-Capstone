@@ -28,4 +28,10 @@ Capstone project for a routine, task, and habit tracking app called RemindME.
 
 CI means GitHub checks our code after we push it or open a PR.
 
-Our [CI workflow](.github/workflows/ci.yml) checks the frontend and backend on PRs into `devs` and `main`. The frontend starter has a TypeScript check. We will add feature tests as we write code. The backend check waits until we choose a backend.
+Our [CI workflow](.github/workflows/ci.yml) runs TypeScript and Jest checks on PRs into `devs` and `main`. Supabase is our hosted backend.
+
+## Run the app
+
+See [Android setup](docs/ANDROID_SETUP.md). From `frontend`, run `npm ci` once, then `npm run android`.
+
+Checks: `npm run typecheck` and `npm test`.

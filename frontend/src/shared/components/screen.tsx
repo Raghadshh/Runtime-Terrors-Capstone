@@ -6,7 +6,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/button";
-import { useRemind } from "@/lib/store";
+import { useRemind } from "@/lib/dashboard";
 import type { ThemeId } from "@/lib/types";
 
 const screenThemes: Record<ThemeId, string> = {
