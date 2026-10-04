@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AccountScreen } from './AccountScreen';
+import { AccountButton, AccountScreen } from './AccountScreen';
 import { useAccounts, type AccountRole } from './AccountsContext';
 import { FormField } from './FormField';
 import { colors, fonts } from './theme';
@@ -68,8 +68,7 @@ function AdultProfileScreen({ independent }: { independent: boolean }) {
     setBusy(true);
     try {
       await saveAdultProfile(name, nickname);
-      if (independent) setError('Profile saved.');
-      else router.replace('/children');
+      router.replace('/home');
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Could not save your profile.');
     } finally {
@@ -92,6 +91,7 @@ function AdultProfileScreen({ independent }: { independent: boolean }) {
     >
       <FormField label="Your name" placeholder="Enter your full name" value={name} onChangeText={(value) => { setName(value); setError(''); }} autoComplete="name" error={error === 'Profile saved.' ? undefined : error} />
       <FormField label="What should we call you? (optional)" placeholder="Enter your preferred name" value={nickname} onChangeText={setNickname} />
+      {!independent && fullName ? <AccountButton label="Manage Child Profiles" kind="secondary" onPress={() => router.push('/children')} /> : null}
       {!independent && fullName ? <Pressable accessibilityRole="button" onPress={logOut}><Text style={styles.logoutText}>Log Out</Text></Pressable> : null}
     </AccountScreen>
   );
@@ -112,7 +112,7 @@ export function ChildrenScreen() {
       subtitle="Manage child profiles"
       footer="Select a child to edit their profile."
       primary={{ label: '+ Add Child Profile', onPress: () => router.push('/child-profile') }}
-      secondary={{ label: 'Back', onPress: () => router.push('/parent-profile') }}
+      secondary={{ label: 'Back', onPress: () => router.replace('/home') }}
     >
       {children.length === 0 ? (
         <View style={styles.emptyCard}><Text style={styles.emptyText}>No child profiles yet. Add one to get started.</Text></View>
@@ -200,3 +200,4 @@ const styles = StyleSheet.create({
   emptyText: { fontFamily: fonts.medium, fontSize: 16, color: colors.muted, textAlign: 'center' },
   deleteText: { fontFamily: fonts.bold, fontSize: 15, color: colors.error, textAlign: 'center', padding: 12 },
 });
+

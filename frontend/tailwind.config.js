@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
+  content: ["./app/**/*.{js,jsx,ts,tsx}", "./src/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
@@ -19,10 +19,11 @@ module.exports = {
         display: ["Nunito_800ExtraBold"],
         brand: ["Nunito_700Bold"],
         soft: ["Nunito_500Medium"],
-        body: ["Inter_400Regular"],
-        strong: ["Inter_700Bold"],
+        body: ["Nunito_500Medium"],
+        strong: ["Nunito_700Bold"],
       },
     },
   },
   plugins: [],
 };
+

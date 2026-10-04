@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -20,6 +20,7 @@ type ButtonProps = {
 
 export function AccountButton({ label, onPress, kind = 'primary', disabled = false }: ButtonProps) {
   const secondary = kind === 'secondary';
+  const [pressed, setPressed] = useState(false);
   return (
     <Pressable
       accessibilityRole="button"
@@ -27,7 +28,9 @@ export function AccountButton({ label, onPress, kind = 'primary', disabled = fal
       onPress={onPress}
       disabled={disabled}
       accessibilityState={{ disabled }}
-      style={({ pressed }) => [
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[
         styles.button,
         secondary ? styles.secondaryButton : styles.primaryButton,
         (pressed || disabled) && styles.pressed,

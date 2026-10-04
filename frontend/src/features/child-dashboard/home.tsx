@@ -1,8 +1,10 @@
 /**
  * Home tab. Parents see the selected child, today's progress, and shortcuts (frame 09). Independent users see their own day (frame 10).
  */
-import { useRouter } from "expo-router";
+import { useDashboardNavigation } from "@/lib/dashboardNavigation";
 import { Pressable, Text, View } from "react-native";
+import { SvgXml } from "react-native-svg";
+import { dashboardArt } from "@assets/illustration";
 
 import { Card } from "@/components/card";
 import { CheckIcon } from "@/components/icons";
@@ -10,7 +12,7 @@ import { Pip } from "@/components/pip";
 import { ProgressBar, ProgressRing } from "@/components/progress";
 import { Screen } from "@/components/screen";
 import { formatClock, greeting, initials } from "@/lib/format";
-import { useMine } from "@/lib/store";
+import { useMine } from "@/lib/dashboard";
 import type { Task } from "@/lib/types";
 
 export default function HomeScreen() {
@@ -23,7 +25,7 @@ export default function HomeScreen() {
 }
 
 function ParentHome() {
-  const router = useRouter();
+  const router = useDashboardNavigation();
   const { user, child, tasks, routines, rewards } = useMine();
   const today = tasks.filter((task) => isToday(task));
   const done = today.filter((task) => task.completed).length;
@@ -50,7 +52,7 @@ function ParentHome() {
       </View>
 
       <Text className="mb-2 mt-6 font-strong text-[13px] tracking-wide text-ink">SELECTED CHILD</Text>
-      <Card onPress={() => router.push("/progress/family")} className="flex-row items-center">
+      <Card onPress={() => router.push("/choose-child")} className="flex-row items-center">
         <View className="h-12 w-12 items-center justify-center rounded-full bg-[#E7F0E4]">
           <Text className="font-strong text-ink">{initials(child?.name ?? "Child")}</Text>
         </View>
@@ -61,7 +63,8 @@ function ParentHome() {
         <Text className="font-strong text-[18px] text-mist">⌄</Text>
       </Card>
 
-      <Card className="mt-4">
+      <View className="mt-4 overflow-hidden rounded-[20px] p-4" style={{ backgroundColor: "#DDECF4" }}>
+        <View pointerEvents="none" style={{ position: "absolute", bottom: 0, left: 0 }}><SvgXml xml={dashboardArt.smallhill} /></View>
         <View className="flex-row items-start justify-between">
           <View className="flex-1 pr-3">
             <Text className="font-strong text-[16px] text-ink">TODAY'S PROGRESS</Text>
@@ -75,7 +78,7 @@ function ParentHome() {
           <Pip variant="home" />
           <Text className="mb-4 font-body text-[13px] text-sprout">Small steps, brighter days.</Text>
         </View>
-      </Card>
+      </View>
 
       <View className="mb-2 mt-5 flex-row items-end justify-between">
         <Text className="font-strong text-[17px] text-ink">Today's Tasks</Text>
@@ -93,7 +96,7 @@ function ParentHome() {
       </Card>
 
       <View className="mt-4 flex-row gap-3">
-        <Card onPress={() => router.push("/routines")} className="flex-1">
+        <Pressable accessibilityRole="button" onPress={() => router.push("/routines")} className="flex-1 rounded-[20px] p-4" style={{ backgroundColor: "#DDECF4" }}>
           <Text className="font-strong text-[15px] text-ink">Routines</Text>
           <Text className="mt-1 font-body text-[12px] text-ink">
             {routineTotal === 0 ? "None yet" : `${routineDone} of ${routineTotal} complete`}
@@ -101,14 +104,14 @@ function ParentHome() {
           <View className="mt-3">
             <ProgressBar percent={routineTotal === 0 ? 0 : Math.round((routineDone / routineTotal) * 100)} />
           </View>
-        </Card>
-        <Card onPress={() => router.push("/progress/rewards")} className="flex-1">
-          <Text className="font-strong text-[15px] text-ink">Rewards</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={() => router.push("/progress/rewards")} className="flex-1 rounded-[20px] p-4" style={{ backgroundColor: "#F8D8CF" }}>
+          <View className="flex-row items-center gap-2"><SvgXml xml={dashboardArt.star} /><Text className="font-strong text-[15px] text-ink">Rewards</Text></View>
           <Text className="mt-1 font-body text-[12px] text-ink">{earned} of {stars} stars</Text>
           <View className="mt-3">
-            <ProgressBar percent={stars === 0 ? 0 : Math.round((earned / stars) * 100)} />
+            <ProgressBar percent={stars === 0 ? 0 : Math.round((earned / stars) * 100)} fillClassName="bg-[#FFD66B]" />
           </View>
-        </Card>
+        </Pressable>
       </View>
 
       <Pressable accessibilityRole="button" onPress={() => router.push("/tasks/new")} className="mt-4 h-[52px] flex-row items-center justify-center gap-2 rounded-[18px] bg-leaf">
@@ -119,7 +122,7 @@ function ParentHome() {
 }
 
 function IndependentHome() {
-  const router = useRouter();
+  const router = useDashboardNavigation();
   const { user, tasks, routines } = useMine();
   const today = tasks.filter((task) => isToday(task));
   const done = today.filter((task) => task.completed).length;
@@ -143,25 +146,30 @@ function IndependentHome() {
         </View>
       </View>
 
-      <Card className="mt-5">
-        <Text className="font-strong text-[20px] text-ink">Today</Text>
-        <Text className="mt-1 font-body text-[14px] text-ink">
-          {total === 0 ? "Your list is clear" : `${done} of ${total} tasks complete`}
-        </Text>
-        <View className="mt-3 flex-row items-center gap-3">
-          <View className="flex-1">
-            <ProgressBar percent={percent} />
+      <View className="mt-5 overflow-hidden rounded-[20px] p-4" style={{ backgroundColor: "#DDECF4", minHeight: 250 }}>
+        <View pointerEvents="none" style={{ position: "absolute", bottom: 0, left: 0 }}><SvgXml xml={dashboardArt.bighill} /></View>
+        <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 16 }}><SvgXml xml={dashboardArt.cloud} /></View>
+        <View style={{ width: "58%" }}>
+          <Text className="font-strong text-[20px] text-ink">Today</Text>
+          <Text className="mt-1 font-body text-[14px] text-ink">
+            {total === 0 ? "Your list is clear" : `${done} of ${total} tasks complete`}
+          </Text>
+          <View className="mt-3 flex-row items-center gap-2">
+            <View className="flex-1"><ProgressBar percent={percent} /></View>
+            <Text className="font-strong text-[14px] text-ink">{percent}%</Text>
           </View>
-          <Text className="font-strong text-[14px] text-ink">{percent}%</Text>
         </View>
-        <View className="mt-3 flex-row items-center justify-between">
-          <View>
-            <Text className="font-strong text-[13px] text-ink">Small steps</Text>
-            <Text className="font-strong text-[13px] text-ink">make big days!</Text>
-          </View>
+        <View pointerEvents="none" style={{ position: "absolute", top: 50, right: 30, transform: [{ scale: 1.3 }] }}>
           <Pip variant="home" />
         </View>
-      </Card>
+        <View className="mt-5 self-start rounded-[16px] bg-white px-3 py-2">
+          <Text className="text-center font-strong text-[13px] text-ink">Small steps</Text>
+          <Text className="text-center font-strong text-[13px] text-ink">make big days!</Text>
+        </View>
+        <View pointerEvents="none" style={{ position: "absolute", top: 130, left: "45%" }}><SvgXml xml={dashboardArt.star} /></View>
+        <View pointerEvents="none" style={{ position: "absolute", bottom: 0, left: 12 }}><SvgXml xml={dashboardArt.leaf} /></View>
+        <View pointerEvents="none" style={{ position: "absolute", bottom: 0, right: 12 }}><SvgXml xml={dashboardArt.leaf2} /></View>
+      </View>
 
       <View className="mb-2 mt-5 flex-row items-end justify-between">
         <Text className="font-strong text-[18px] text-ink">Up Next</Text>
@@ -190,17 +198,18 @@ function IndependentHome() {
       </View>
       <Card className="flex-row justify-between">
         {buckets.map((label) => (
-          <Pressable key={label} accessibilityRole="button" onPress={() => router.push("/routines")} className="items-center">
-            <View className="h-14 w-14 items-center justify-center rounded-full bg-[#E7F0E4]">
+          <Pressable key={label} accessibilityRole="button" onPress={() => router.push("/routines")} className="flex-1 items-center rounded-[16px] py-3 mx-1" style={{ backgroundColor: label === "Morning" ? "#FFF1C5" : label === "School" ? "#E3F0DD" : "#DDECF4" }}>
+            <View className="h-10 w-10 items-center justify-center">
               <Text className="font-strong text-[12px] text-ink">{label.slice(0, 1)}</Text>
             </View>
             <Text className="mt-2 font-body text-[11px] text-ink">{label}</Text>
           </Pressable>
         ))}
       </Card>
-      <Card className="mt-4">
+      <View className="mt-4 flex-row items-center justify-between rounded-[20px] p-4" style={{ backgroundColor: "#F8D8CF" }}>
         <Text className="font-strong text-[15px] text-ink">Small steps make big days!</Text>
-      </Card>
+        <SvgXml xml={dashboardArt.star} />
+      </View>
     </Screen>
   );
 }

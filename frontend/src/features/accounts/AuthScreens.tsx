@@ -14,7 +14,7 @@ export function WelcomeScreen() {
   // Only redirect from the welcome screen, never from behind the reset form.
   useFocusEffect(useCallback(() => {
     if (!loading && userId) {
-      router.replace(role === 'parent' ? '/children' : role === 'independent' ? '/independent-profile' : '/account-type');
+      router.replace(role ? '/home' : '/account-type');
     }
   }, [loading, userId, role]));
 
@@ -98,7 +98,7 @@ export function LoginScreen() {
     setNotice('');
     try {
       const role = await signIn(email, password);
-      router.replace(role === 'parent' ? '/children' : role === 'independent' ? '/independent-profile' : '/account-type');
+      router.replace(role ? '/home' : '/account-type');
     } catch (error) {
       setNotice(authMessage(error, 'Could not log in.'));
     } finally {

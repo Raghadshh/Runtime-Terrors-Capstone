@@ -1,14 +1,15 @@
+import { Alert } from "react-native";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import ChildDashboardScreen from "../child";
-import { useMine } from "@/lib/store";
+import { useMine } from "@/lib/dashboard";
 import { useRouter } from "expo-router";
 
 jest.mock("expo-router", () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock("@/lib/store", () => ({
+jest.mock("@/lib/dashboard", () => ({
   useMine: jest.fn(),
   useRemind: jest.fn(() => ({ session: { theme: "cream" }, syncNote: null })),
 }));
@@ -18,6 +19,7 @@ describe("ChildDashboardScreen Component", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Alert, "alert").mockImplementation(() => {});
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
 
     (useMine as jest.Mock).mockReturnValue({
@@ -53,21 +55,23 @@ describe("ChildDashboardScreen Component", () => {
     expect(screen.getByText("10 points away")).toBeTruthy();
   });
 
-  it("navigates to task details when an open task card is tapped", async () => {
+  it("shows availability message for task details when an open task card is tapped", async () => {
     await render(<ChildDashboardScreen />);
 
     const taskCard = screen.getByText("Pack Backpack");
     await fireEvent.press(taskCard);
 
-    expect(mockPush).toHaveBeenCalledWith("/tasks/t1");
+    expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
+      expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("navigates to routine details when routine card is pressed", async () => {
+  it("shows availability message for routine details when routine card is pressed", async () => {
     await render(<ChildDashboardScreen />);
 
     const routineCard = screen.getByText("Morning Routine");
     await fireEvent.press(routineCard);
 
-    expect(mockPush).toHaveBeenCalledWith("/routines/r1");
+    expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
+      expect(mockPush).not.toHaveBeenCalled();
   });
 });

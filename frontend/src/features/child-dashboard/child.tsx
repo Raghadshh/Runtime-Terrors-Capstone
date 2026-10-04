@@ -1,7 +1,7 @@
 /**
  * Child dashboard (wireframe 25) which is part of the dashboard (Home). A child's own view of today's tasks, routines, and points.
  */
-import { useRouter } from "expo-router";
+import { useDashboardNavigation } from "@/lib/dashboardNavigation";
 import { Text, View } from "react-native";
 
 import { Card } from "@/components/card";
@@ -9,26 +9,25 @@ import { Header } from "@/components/header";
 import { ProgressBar } from "@/components/progress";
 import { Screen } from "@/components/screen";
 import { formatClock } from "@/lib/format";
-import { useMine } from "@/lib/store";
+import { useMine } from "@/lib/dashboard";
 
 export default function ChildDashboardScreen() {
-  const router = useRouter();
+  const router = useDashboardNavigation();
   const { child, tasks, routines, user, rewards } = useMine();
   const open = tasks.filter((task) => !task.completed);
   const done = tasks.filter((task) => task.completed).length;
   const routine = routines[0];
   const routineDone = routine?.steps.filter((step) => step.completed).length ?? 0;
   const nextReward = rewards.find((reward) => reward.points > (user?.points ?? 0));
-  const name = child?.name ?? user?.preferredName ?? "Alex";
+  const name = child?.name || user?.preferredName || user?.name || "Friend";
   return (
     <Screen>
       <Header title="Today" />
-      <Text className="font-body text-[12px] text-mist">9:41</Text>
       <Text className="mt-2 font-strong text-[24px] text-ink">Good morning, {name}!</Text>
       <Text className="font-body text-[14px] text-mist">You have {open.length} small wins waiting.</Text>
       <Card className="mt-4">
         <Text className="font-strong text-[15px] text-ink">Today’s progress</Text>
-        <Text className="font-display text-[28px] text-ink">{done} of {tasks.length || 5}</Text>
+        <Text className="font-display text-[28px] text-ink">{done} of {tasks.length}</Text>
         <Text className="mb-2 font-body text-[13px] text-mist">tasks finished</Text>
         <ProgressBar percent={tasks.length === 0 ? 0 : Math.round((done / tasks.length) * 100)} />
       </Card>
@@ -54,7 +53,7 @@ export default function ChildDashboardScreen() {
         </Card>
         <Card onPress={() => router.push("/progress/rewards")} className="flex-1">
           <Text className="font-body text-[12px] text-mist">Next reward</Text>
-          <Text className="font-body text-[13px] text-ink">{nextReward ? `${nextReward.points - (user?.points ?? 0)} points away` : "All unlocked"}</Text>
+          <Text className="font-body text-[13px] text-ink">{nextReward ? `${nextReward.points - (user?.points ?? 0)} points away` : rewards.length ? "All unlocked" : "No rewards yet"}</Text>
         </Card>
       </View>
     </Screen>

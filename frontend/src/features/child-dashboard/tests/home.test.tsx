@@ -1,7 +1,8 @@
+import { Alert } from "react-native";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react-native";
 import HomeScreen from "../home";
-import { useMine } from "@/lib/store";
+import { useMine } from "@/lib/dashboard";
 import { useRouter } from "expo-router";
 
 // Mock Expo Router
@@ -10,7 +11,7 @@ jest.mock("expo-router", () => ({
 }));
 
 // Mock the Zustand state store
-jest.mock("@/lib/store", () => ({
+jest.mock("@/lib/dashboard", () => ({
   useMine: jest.fn(),
   useRemind: jest.fn(() => ({ session: { theme: "cream" }, syncNote: null })),
 }));
@@ -20,6 +21,7 @@ describe("HomeScreen Component", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Alert, "alert").mockImplementation(() => {});
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
   });
 
@@ -56,13 +58,14 @@ describe("HomeScreen Component", () => {
       expect(screen.getByText("50%")).toBeTruthy();
     });
 
-    it("navigates to create task screen when '+ Add Task' button is pressed", async () => {
+    it("shows availability message for create task when '+ Add Task' button is pressed", async () => {
       await render(<HomeScreen />);
 
       const addTaskButton = screen.getByText("+ Add Task");
       await fireEvent.press(addTaskButton);
 
-      expect(mockPush).toHaveBeenCalledWith("/tasks/new");
+      expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
+      expect(mockPush).not.toHaveBeenCalled();
     });
   });
 
@@ -89,13 +92,14 @@ describe("HomeScreen Component", () => {
       expect(screen.getByText("Read Book")).toBeTruthy();
     });
 
-    it("navigates to all tasks when 'View all' is pressed", async () => {
+    it("shows availability message for tasks when 'View all' is pressed", async () => {
       await render(<HomeScreen />);
 
       const viewAllButton = screen.getByText("View all");
       await fireEvent.press(viewAllButton);
 
-      expect(mockPush).toHaveBeenCalledWith("/tasks");
+      expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
+      expect(mockPush).not.toHaveBeenCalled();
     });
   });
 });
