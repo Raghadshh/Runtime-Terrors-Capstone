@@ -1,5 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, SafeAreaView, View, Text } from 'react-native';
+import { registerRootComponent } from 'expo';
 import { ParentTaskForm } from './src/components/ParentTaskForm';
 import ChildTaskCard from './src/components/ChildTaskCard';
 
@@ -45,3 +46,5 @@ const styles = StyleSheet.create({
     height: 20,
   },
 });
+
+registerRootComponent(App);
