@@ -20,6 +20,7 @@ export default function Home() {
 
   function navigate(name: string) {
     if (name === 'profile') router.push('/profile');
+    else if (name === 'tasks') router.push('/tasks');
     else if (name !== 'home') Alert.alert('Coming soon', 'This feature is not available yet.');
   }
 

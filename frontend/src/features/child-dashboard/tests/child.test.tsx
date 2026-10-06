@@ -55,14 +55,14 @@ describe("ChildDashboardScreen Component", () => {
     expect(screen.getByText("10 points away")).toBeTruthy();
   });
 
-  it("shows availability message for task details when an open task card is tapped", async () => {
+  it("opens task details when an open task card is tapped", async () => {
     await render(<ChildDashboardScreen />);
 
     const taskCard = screen.getByText("Pack Backpack");
     await fireEvent.press(taskCard);
 
-    expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
-      expect(mockPush).not.toHaveBeenCalled();
+    expect(mockPush).toHaveBeenCalledWith("/tasks/t1");
+    expect(Alert.alert).not.toHaveBeenCalled();
   });
 
   it("shows availability message for routine details when routine card is pressed", async () => {

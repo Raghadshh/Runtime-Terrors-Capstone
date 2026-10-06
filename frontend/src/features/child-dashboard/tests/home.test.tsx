@@ -58,14 +58,14 @@ describe("HomeScreen Component", () => {
       expect(screen.getByText("50%")).toBeTruthy();
     });
 
-    it("shows availability message for create task when '+ Add Task' button is pressed", async () => {
+    it("opens the new task form when '+ Add Task' button is pressed", async () => {
       await render(<HomeScreen />);
 
       const addTaskButton = screen.getByText("+ Add Task");
       await fireEvent.press(addTaskButton);
 
-      expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
-      expect(mockPush).not.toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith("/tasks/new");
+      expect(Alert.alert).not.toHaveBeenCalled();
     });
   });
 
@@ -92,14 +92,14 @@ describe("HomeScreen Component", () => {
       expect(screen.getByText("Read Book")).toBeTruthy();
     });
 
-    it("shows availability message for tasks when 'View all' is pressed", async () => {
+    it("opens the task list when 'View all' is pressed", async () => {
       await render(<HomeScreen />);
 
       const viewAllButton = screen.getByText("View all");
       await fireEvent.press(viewAllButton);
 
-      expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
-      expect(mockPush).not.toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith("/tasks");
+      expect(Alert.alert).not.toHaveBeenCalled();
     });
   });
 });
