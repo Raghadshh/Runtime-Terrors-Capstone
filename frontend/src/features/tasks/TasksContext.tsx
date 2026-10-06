@@ -8,6 +8,8 @@ import { AppState } from "react-native";
 import { todayISO } from "@/lib/format";
 import type { Task } from "@/lib/types";
 
+import { syncTaskTimerDuration } from "../timer/countdownTimer";
+
 import { useAccounts } from "../accounts/AccountsContext";
 import {
   deleteTaskRow,
@@ -109,6 +111,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     async (form: TaskForm, id?: string) => {
       if (!userId) throw new Error("Log in to save tasks.");
       const saved = id ? await updateTaskRow(id, form) : await insertTask(userId, form);
+      syncTaskTimerDuration(saved.id, saved.durationMinutes);
       setTasks((current) => [...current.filter((task) => task.id !== saved.id), saved]);
       if (form.reminderEnabled) await askForReminderPermission();
       return saved;

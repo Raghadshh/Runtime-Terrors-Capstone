@@ -2,20 +2,26 @@
  * F1 pop-up reminders (R10). Local notifications scheduled on the phone: free (NF9) and they still fire offline.
  * Each sync clears F1's reminders and schedules the current plan, so edits, deletes and completions are reflected.
  */
-import * as Notifications from "expo-notifications";
+import { isRunningInExpoGo } from "expo";
 import { Platform } from "react-native";
 
-import { ensureNotificationPermission } from "@/lib/notifications"; // also installs the foreground handler
 
 import type { PlannedReminder } from "./taskRules";
 
 const KIND = "f1-task-reminder";
 const CHANNEL_ID = "task-reminders";
 
+function getNotifications(): typeof import("expo-notifications") | null {
+  // Android Expo Go throws when this module loads; reminders need a development build there.
+  if (Platform.OS === "web" || (Platform.OS === "android" && isRunningInExpoGo())) return null;
+  return require("expo-notifications");
+}
+
 /** Ask for permission (shows the system prompt once). Call when the user turns a reminder on. */
 export async function askForReminderPermission(): Promise<boolean> {
-  if (Platform.OS === "web") return false;
+  if (!getNotifications()) return false;
   try {
+    const { ensureNotificationPermission } = require("@/lib/notifications") as typeof import("@/lib/notifications");
     return await ensureNotificationPermission();
   } catch {
     return false;
@@ -25,7 +31,8 @@ export async function askForReminderPermission(): Promise<boolean> {
 let queue: Promise<void> = Promise.resolve();
 
 export function syncTaskReminders(plan: PlannedReminder[]): Promise<void> {
-  if (Platform.OS === "web") return Promise.resolve();
+  const Notifications = getNotifications();
+  if (!Notifications) return Promise.resolve();
   queue = queue
     .then(async () => {
       if (Platform.OS === "android") {
@@ -60,7 +67,8 @@ export function syncTaskReminders(plan: PlannedReminder[]): Promise<void> {
 
 /** Runs `open(taskId)` when someone taps an F1 reminder. Returns a cleanup function. */
 export function onReminderTap(open: (taskId: string) => void): () => void {
-  if (Platform.OS === "web") return () => undefined;
+  const Notifications = getNotifications();
+  if (!Notifications) return () => undefined;
   const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
     const data = response.notification.request.content.data;
     if (data?.kind === KIND && typeof data.taskId === "string") open(data.taskId);

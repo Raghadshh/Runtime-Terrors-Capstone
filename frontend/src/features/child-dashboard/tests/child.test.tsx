@@ -51,7 +51,7 @@ describe("ChildDashboardScreen Component", () => {
   it("displays points and points needed for next reward", async () => {
     await render(<ChildDashboardScreen />);
 
-    expect(screen.getByText("★ 40")).toBeTruthy();
+    expect(screen.getByText("40")).toBeTruthy();
     expect(screen.getByText("10 points away")).toBeTruthy();
   });
 

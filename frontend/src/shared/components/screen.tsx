@@ -20,9 +20,11 @@ interface ScreenProps {
   children: ReactNode;
   footer?: ReactNode;
   scroll?: boolean;
+  bottomContent?: ReactNode;
+  bottomBar?: ReactNode;
 }
 
-export function Screen({ children, footer, scroll = true }: ScreenProps) {
+export function Screen({ children, footer, bottomContent, bottomBar, scroll = true }: ScreenProps) {
   const { session, syncNote } = useRemind();
   const background = screenThemes[session?.theme ?? "cream"];
   const body = scroll ? (
@@ -37,9 +39,11 @@ export function Screen({ children, footer, scroll = true }: ScreenProps) {
     </View>
   );
   return (
-    <SafeAreaView className={`flex-1 ${background}`}>
+    <SafeAreaView edges={bottomBar ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]} className={`flex-1 ${background}`}>
       {body}
-      {footer ? <View className="gap-3 px-7 pb-6">{footer}</View> : null}
+      {bottomContent}
+      {footer ? <View className={`gap-3 px-7 ${bottomBar ? "pb-3" : "pb-6"}`}>{footer}</View> : null}
+      {bottomBar ? <SafeAreaView edges={["bottom"]} className="bg-white">{bottomBar}</SafeAreaView> : null}
     </SafeAreaView>
   );
 }
