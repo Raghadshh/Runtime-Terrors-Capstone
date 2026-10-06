@@ -127,11 +127,12 @@ export default function TaskFormScreen({ taskId }: { taskId?: string }) {
       <FieldError message={errors.date} />
 
       <FieldLabel>TIME</FieldLabel>
-      <Stepper label="time" value={formatClock(form.time)} onMinus={() => set({ time: shiftTime(form.time, -15) })} onPlus={() => set({ time: shiftTime(form.time, 15) })} />
-      <ChipRow>
-        <Chip label="−1 hour" onPress={() => set({ time: shiftTime(form.time, -60) })} />
-        <Chip label="+1 hour" onPress={() => set({ time: shiftTime(form.time, 60) })} />
-      </ChipRow>
+      <Text accessibilityLabel={`Time: ${formatClock(form.time)}`} className="mb-2 text-center font-strong text-[24px] text-ink">
+        {formatClock(form.time)}
+      </Text>
+      <Stepper label="hour" value="Hour" onMinus={() => set({ time: shiftTime(form.time, -60) })} onPlus={() => set({ time: shiftTime(form.time, 60) })} />
+      <View className="h-2" />
+      <Stepper label="minute" value="Minute" onMinus={() => set({ time: shiftTime(form.time, -1) })} onPlus={() => set({ time: shiftTime(form.time, 1) })} />
       <FieldError message={errors.time} />
 
       <FieldLabel>HOW LONG?</FieldLabel>
