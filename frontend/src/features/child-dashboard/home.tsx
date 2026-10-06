@@ -1,6 +1,7 @@
 /**
  * Home tab. Parents see the selected child, today's progress, and shortcuts (frame 09). Independent users see their own day (frame 10).
  */
+import type { ReactNode } from "react";
 import { useDashboardNavigation } from "@/lib/dashboardNavigation";
 import { Pressable, Text, View } from "react-native";
 import { SvgXml } from "react-native-svg";
@@ -15,16 +16,16 @@ import { formatClock, greeting, initials } from "@/lib/format";
 import { useMine } from "@/lib/dashboard";
 import type { Task } from "@/lib/types";
 
-export default function HomeScreen() {
+export default function HomeScreen({ bottomBar }: { bottomBar?: ReactNode }) {
   const { user } = useMine();
   // One home route serves both dashboard frames. The account type picks the layout.
   if (user?.accountType === "independent") {
-    return <IndependentHome />;
+    return <IndependentHome bottomBar={bottomBar} />;
   }
-  return <ParentHome />;
+  return <ParentHome bottomBar={bottomBar} />;
 }
 
-function ParentHome() {
+function ParentHome({ bottomBar }: { bottomBar?: ReactNode }) {
   const router = useDashboardNavigation();
   const { user, child, tasks, routines, rewards } = useMine();
   const today = tasks.filter((task) => isToday(task));
@@ -39,7 +40,7 @@ function ParentHome() {
   const name = user?.preferredName || user?.name || "Jamie";
 
   return (
-    <Screen>
+    <Screen bottomBar={bottomBar}>
       <View className="mt-2 flex-row items-start justify-between">
         <View className="flex-1 pr-3">
           <Text className="font-body text-[14px] text-ink">{greeting()}</Text>
@@ -121,7 +122,7 @@ function ParentHome() {
   );
 }
 
-function IndependentHome() {
+function IndependentHome({ bottomBar }: { bottomBar?: ReactNode }) {
   const router = useDashboardNavigation();
   const { user, tasks, routines } = useMine();
   const today = tasks.filter((task) => isToday(task));
@@ -134,7 +135,7 @@ function IndependentHome() {
   const buckets = ["Morning", "School", "Evening"] as const;
 
   return (
-    <Screen>
+    <Screen bottomBar={bottomBar}>
       <View className="mt-2 flex-row items-start justify-between">
         <View>
           <Text className="font-body text-[14px] text-ink">{greeting()}</Text>

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Switch, Text, View } from "react-native";
 
 import { Button } from "@/components/button";
+import { BellIcon } from "@/components/icons";
 import { Header } from "@/components/header";
 import { Input } from "@/components/input";
 import { FormError, Screen } from "@/components/screen";
@@ -90,17 +91,21 @@ export default function TaskFormScreen({ taskId }: { taskId?: string }) {
 
   return (
     <Screen footer={<Button label={saving ? "Saving…" : existing ? "Save Changes" : "Create Task"} onPress={() => void save()} disabled={saving} />}>
-      <Header title={existing ? "Edit Task" : "New Task"} />
+      <Header title={existing ? "Edit Task" : "Create Task"} />
 
+      <View className="mb-4 rounded-[20px] bg-white p-4">
+      <View className="mb-3 rounded-[16px] p-3" style={{ backgroundColor: "#FFF1B8" }}><Text className="font-strong text-[17px] text-ink">What needs to get done?</Text></View>
       <Input label="Task name" value={form.title} onChangeText={(title) => set({ title })} placeholder="e.g. Brush teeth" />
       <FieldError message={errors.title} />
       <View className="h-3" />
       <Input label="Details (optional)" value={form.description} onChangeText={(description) => set({ description })} placeholder="What does done look like?" multiline />
       <FieldError message={errors.description} />
+      </View>
+      <Text className="font-body text-[13px] text-mist">{isParent ? "Parent account — assign this task to a child below." : "Independent account — tasks are for you. Use a parent account to assign to a child."}</Text>
 
       {isParent ? (
         <>
-          <FieldLabel>FOR</FieldLabel>
+          <FieldLabel>ASSIGNMENT</FieldLabel>
           <ChipRow>
             {children.map((profile) => (
               <Chip key={profile.id} label={profile.name} selected={form.childId === profile.id} onPress={() => set({ childId: profile.id })} />
@@ -111,6 +116,8 @@ export default function TaskFormScreen({ taskId }: { taskId?: string }) {
         </>
       ) : null}
 
+      <View className="mt-4 rounded-[20px] p-4" style={{ backgroundColor: "#DDECF4" }}>
+      <Text className="mb-3 font-strong text-[17px] text-ink">When?</Text>
       <FieldLabel>DAY</FieldLabel>
       <ChipRow>
         <Chip label="Today" selected={form.date === today} onPress={() => set({ date: today })} />
@@ -134,12 +141,14 @@ export default function TaskFormScreen({ taskId }: { taskId?: string }) {
       <View className="h-2" />
       <Stepper label="minute" value="Minute" onMinus={() => set({ time: shiftTime(form.time, -1) })} onPlus={() => set({ time: shiftTime(form.time, 1) })} />
       <FieldError message={errors.time} />
+      </View>
 
-      <FieldLabel>HOW LONG?</FieldLabel>
+      <View className="h-4" />
       <DurationPicker value={form.durationMinutes} onChange={(durationMinutes) => set({ durationMinutes })} showError={!!errors.durationMinutes} />
       <FieldError message={errors.durationMinutes} />
 
-      <FieldLabel>REPEAT</FieldLabel>
+      <View className="mt-4 rounded-[20px] p-4" style={{ backgroundColor: "#F8D8CF" }}>
+      <Text className="mb-3 font-strong text-[16px] text-ink">Repeat</Text>
       <ChipRow>
         {REPEATS.map((option) => (
           <Chip
@@ -160,10 +169,11 @@ export default function TaskFormScreen({ taskId }: { taskId?: string }) {
         </View>
       ) : null}
       <FieldError message={errors.repeatDays} />
+      </View>
 
       <FieldLabel>REMINDER</FieldLabel>
-      <View className="flex-row items-center justify-between rounded-[20px] bg-white px-4 py-3">
-        <Text className="font-strong text-[16px] text-ink">{form.reminderEnabled ? "🔔 Remind me" : "🔕 No reminder"}</Text>
+      <View className="flex-row items-center justify-between rounded-[20px] px-4 py-3" style={{ backgroundColor: "#DDECF4" }}>
+        <View className="flex-row items-center gap-2"><BellIcon /><Text className="font-strong text-[16px] text-ink">{form.reminderEnabled ? "Remind me" : "No reminder"}</Text></View>
         <Switch accessibilityLabel="Reminder" value={form.reminderEnabled} onValueChange={(reminderEnabled) => set({ reminderEnabled })} />
       </View>
       {form.reminderEnabled ? (

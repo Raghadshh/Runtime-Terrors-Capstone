@@ -2,6 +2,7 @@
  * Small controls used by the F1 task screens. Selected state is shown with a check mark and bold text,
  * not color alone (NF2).
  */
+import { CheckIcon } from "@/components/icons";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -22,10 +23,10 @@ export function Chip({
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ selected }}
       onPress={onPress}
-      className={`min-h-[44px] justify-center rounded-full border-[1.5px] px-4 ${selected ? "border-leaf bg-[#E7F6EC]" : "border-sage bg-white"}`}
+      className={`min-h-[44px] justify-center flex-row items-center gap-2 rounded-full border-[1.5px] px-4 ${selected ? "border-leaf bg-[#E7F6EC]" : "border-sage bg-white"}`}
     >
+      {selected ? <CheckIcon /> : null}
       <Text className={`text-[15px] text-ink ${selected ? "font-strong" : "font-body"}`}>
-        {selected ? "✓ " : ""}
         {label}
       </Text>
     </Pressable>
@@ -71,7 +72,7 @@ export function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
     <Text accessibilityRole="alert" className="mt-1.5 font-body text-[13px] text-[#9C4A4A]">
-      ⚠ {message}
+      {message}
     </Text>
   );
 }

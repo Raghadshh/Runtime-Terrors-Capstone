@@ -66,3 +66,15 @@ export function CheckIcon({ color = "#2C7A4B" }: IconProps) {
     </Svg>
   );
 }
+
+export function ClockIcon({ color = "#294A60", size = 20 }: IconProps) {
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Circle cx="12" cy="12" r="8" stroke={color} strokeWidth={1.7} /><Path d="M12 7v5l3 2" stroke={color} strokeWidth={1.7} strokeLinecap="round" /></Svg>;
+}
+
+export function CalendarIcon({ color = "#294A60", size = 20 }: IconProps) {
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Rect x="4" y="6" width="16" height="15" rx="2" stroke={color} strokeWidth={1.7} /><Path d="M8 3v6M16 3v6M4 11h16" stroke={color} strokeWidth={1.7} strokeLinecap="round" /></Svg>;
+}
+
+export function BellIcon({ color = "#294A60", size = 20 }: IconProps) {
+  return <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5l-2 3ZM10 21h4" stroke={color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" /></Svg>;
+}

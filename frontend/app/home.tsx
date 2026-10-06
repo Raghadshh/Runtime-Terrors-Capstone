@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { router } from 'expo-router';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Text } from 'react-native';
 import HomeScreen from '../src/features/child-dashboard/home';
 import { useAccounts } from '../src/features/accounts/AccountsContext';
-import { colors } from '../src/features/accounts/theme';
 import { RemindTabBar } from '../src/shared/components/tab-bar';
 
 const routes = ['home', 'tasks', 'routines', 'progress', 'profile'].map(name => ({ name, key: name }));
@@ -24,8 +23,5 @@ export default function Home() {
     else if (name !== 'home') Alert.alert('Coming soon', 'This feature is not available yet.');
   }
 
-  return <View style={{ flex: 1, backgroundColor: colors.background }}>
-    <HomeScreen />
-    <RemindTabBar state={{ index: 0, routes }} navigation={{ navigate }} />
-  </View>;
+  return <HomeScreen bottomBar={<RemindTabBar state={{ index: 0, routes }} navigation={{ navigate }} />} />;
 }
