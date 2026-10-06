@@ -6,7 +6,7 @@ export function useDashboardNavigation() {
   return {
     ...router,
     push(path: string) {
-      if (['/profile', '/choose-child', '/home', '/children'].includes(path)) {
+      if (['/profile', '/choose-child', '/home', '/children'].includes(path) || path === '/tasks' || path.startsWith('/tasks/')) {
         router.push(path as Href);
       } else {
         Alert.alert('Coming soon', 'This feature is not available yet.');

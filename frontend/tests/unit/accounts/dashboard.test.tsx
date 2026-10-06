@@ -7,6 +7,8 @@ let mockAccount = {
   children: [{ id: 'child-1', name: 'Mark', age: 12 }, { id: 'child-2', name: 'Sam', age: 8 }],
 };
 jest.mock('../../../src/features/accounts/AccountsContext', () => ({ useAccounts: () => mockAccount }));
+// F1: the dashboard reads tasks from TasksContext; keep this test offline.
+jest.mock('../../../src/features/tasks/TasksContext', () => ({ useTasks: () => ({ tasks: [], done: new Set(), today: '2026-10-06' }) }));
 
 it('uses the signed-in profile and selected child without demo records', async () => {
   const { result, rerender } = await renderHook(() => useMine(), { wrapper: DashboardProvider });
