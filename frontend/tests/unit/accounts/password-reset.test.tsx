@@ -62,13 +62,13 @@ test('recovery stays on the password form, then saves and returns to login', asy
   await screen.findByLabelText('New password');
   expect(router.replace).not.toHaveBeenCalled();
   expect(mockAuth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'test-hash', type: 'recovery' });
-  await fireEvent.changeText(screen.getByLabelText('New password'), 'newpassword123');
-  await fireEvent.changeText(screen.getByLabelText('Confirm password'), 'newpassword123');
+  await fireEvent.changeText(screen.getByLabelText('New password'), 'Newpassword123!');
+  await fireEvent.changeText(screen.getByLabelText('Confirm password'), 'Newpassword123!');
   await fireEvent.press(screen.getByRole('button', { name: 'Save Password' }));
   await waitFor(() => expect(router.replace).toHaveBeenCalledWith({
     pathname: '/login', params: { email: 'test@example.com', passwordReset: 'true' },
   }));
-  expect(mockAuth.updateUser).toHaveBeenCalledWith({ password: 'newpassword123' });
+  expect(mockAuth.updateUser).toHaveBeenCalledWith({ password: 'Newpassword123!' });
   expect(mockAuth.signOut).toHaveBeenCalled();
 });
 
@@ -93,3 +93,16 @@ test('email limits show a clear message without moving to link verification', as
 });
 
 
+
+test('reset rejects a weak new password before contacting Supabase', async () => {
+  await render(<AccountsProvider><ResetPasswordScreen /></AccountsProvider>);
+  await fireEvent.press(screen.getByRole('button', { name: 'Send Reset Email' }));
+  await fireEvent.changeText(await screen.findByLabelText('Reset email link or code'), '12345678');
+  await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+  await screen.findByLabelText('New password');
+  await fireEvent.changeText(screen.getByLabelText('New password'), 'password123!');
+  await fireEvent.changeText(screen.getByLabelText('Confirm password'), 'password123!');
+  await fireEvent.press(screen.getByRole('button', { name: 'Save Password' }));
+  await screen.findByText('Include at least one uppercase letter.');
+  expect(mockAuth.updateUser).not.toHaveBeenCalled();
+});
