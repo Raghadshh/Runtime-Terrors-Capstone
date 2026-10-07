@@ -5,7 +5,7 @@ import { Image, StyleSheet } from 'react-native';
 import { AccountScreen } from './AccountScreen';
 import { useAccounts } from './AccountsContext';
 import { FormField } from './FormField';
-import { accountErrors, validEmail } from './validation';
+import { accountErrors, passwordRequirements, validEmail } from './validation';
 import { authMessage } from './authMessage';
 
 export function WelcomeScreen() {
@@ -66,7 +66,7 @@ export function CreateAccountScreen() {
       notice={notice}
     >
       <FormField label="Email" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" error={submitted ? errors.email : undefined} />
-      <FormField label="Password" placeholder="Enter your password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" error={submitted ? errors.password : undefined} />
+      <FormField label="Password" hint={passwordRequirements} placeholder="Enter your password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" error={submitted ? errors.password : undefined} />
       <FormField label="Confirm password" placeholder="Re-enter your password" value={confirmation} onChangeText={setConfirmation} secureTextEntry autoComplete="new-password" error={submitted ? errors.confirmation : undefined} />
     </AccountScreen>
   );

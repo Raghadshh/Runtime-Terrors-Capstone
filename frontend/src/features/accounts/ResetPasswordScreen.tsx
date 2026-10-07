@@ -5,7 +5,7 @@ import { AccountScreen } from './AccountScreen';
 import { FormField } from './FormField';
 import { authMessage } from './authMessage';
 import { requireSupabase } from './supabase';
-import { validEmail } from './validation';
+import { passwordError, passwordRequirements, validEmail } from './validation';
 
 export function ResetPasswordScreen() {
   const params = useLocalSearchParams<{ email?: string }>();
@@ -74,8 +74,9 @@ export function ResetPasswordScreen() {
   }
 
   async function savePassword() {
-    if (password.length < 8) {
-      setNotice('Use at least 8 characters.');
+    const error = passwordError(password);
+    if (error) {
+      setNotice(error);
       return;
     }
     if (password !== confirmation) {
@@ -127,7 +128,7 @@ export function ResetPasswordScreen() {
       {step === 'email' ? <FormField label="Email" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" /> : null}
       {step === 'code' ? <FormField label="Reset email link or code" placeholder="Paste your reset link here" value={code} onChangeText={setCode} autoCapitalize="none" autoCorrect={false} maxLength={4096} /> : null}
       {step === 'password' ? <>
-        <FormField label="New password" placeholder="Use at least 8 characters" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
+        <FormField label="New password" hint={passwordRequirements} placeholder="Use at least 8 characters" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" />
         <FormField label="Confirm password" placeholder="Re-enter your new password" value={confirmation} onChangeText={setConfirmation} secureTextEntry autoComplete="new-password" />
       </> : null}
     </AccountScreen>
