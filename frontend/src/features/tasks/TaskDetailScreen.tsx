@@ -30,7 +30,7 @@ function confirmDelete(title: string): Promise<boolean> {
   );
 }
 
-export default function TaskDetailScreen({ taskId }: { taskId: string }) {
+export default function TaskDetailScreen({ taskId, childView = false }: { taskId: string; childView?: boolean }) {
   const router = useRouter();
   const { children } = useMine();
   const { tasks, done, today, setDone, removeTask } = useTasks();
@@ -106,14 +106,14 @@ export default function TaskDetailScreen({ taskId }: { taskId: string }) {
           {next ? `Available to complete on ${formatLongDate(next)}.` : 'This task has no upcoming scheduled days.'}
         </Text> : null}
       </View>
-      <View className="mt-3 flex-row gap-3">
+      {!childView ? <View className="mt-3 flex-row gap-3">
         <Pressable accessibilityRole="button" onPress={() => router.push(`/tasks/edit/${task.id}`)} className="flex-1 items-center rounded-[12px] py-3" style={{ backgroundColor: '#FFF1B8' }}>
           <Text className="font-strong text-[14px] text-ink">Edit Task</Text>
         </Pressable>
         <Pressable accessibilityRole="button" onPress={() => void remove()} className="flex-1 items-center rounded-[12px] py-3" style={{ backgroundColor: '#FFF1B8' }}>
           <Text className="font-strong text-[14px] text-[#9C3D48]">Delete Task</Text>
         </Pressable>
-      </View>
+      </View> : null}
       <FormError message={error} />
       <Text className="mb-3 mt-6 font-strong text-[17px] text-ink">Timer</Text>
       <CircularTimer timer={timer} size={180} />
