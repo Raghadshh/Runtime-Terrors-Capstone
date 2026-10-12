@@ -61,7 +61,7 @@ describe("ChildDashboardScreen Component", () => {
     const taskCard = screen.getByText("Pack Backpack");
     await fireEvent.press(taskCard);
 
-    expect(mockPush).toHaveBeenCalledWith("/tasks/t1");
+    expect(mockPush).toHaveBeenCalledWith("/tasks/t1?childView=1");
     expect(Alert.alert).not.toHaveBeenCalled();
   });
 

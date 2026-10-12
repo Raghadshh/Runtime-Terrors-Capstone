@@ -49,7 +49,7 @@ export default function ChildDashboardScreen() {
       </View>
       <Text className="mb-2 mt-4 font-strong text-[16px] text-ink">Up next</Text>
       {open.slice(0, 2).map((task) => (
-        <Card key={task.id} onPress={() => router.push(`/tasks/${task.id}`)} className="mb-2">
+        <Card key={task.id} onPress={() => router.push(`/tasks/${task.id}?childView=1`)} className="mb-2">
           <Text className="font-strong text-[15px] text-ink">{task.title}</Text>
           <Text className="font-body text-[12px] text-mist">{formatClock(task.time)} • {task.durationMinutes} min</Text>
         </Card>
