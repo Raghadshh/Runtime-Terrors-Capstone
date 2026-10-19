@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useAccounts } from '../../features/accounts/AccountsContext';
+import { useRoutines } from '../../features/routines/RoutinesContext';
+import { routineOccursOn } from '../../features/routines/routineRules';
 import { useTasks } from '../../features/tasks/TasksContext'; // F1
 import { tasksForDay } from '../../features/tasks/taskRules'; // F1
 import type { ChildProfile, Routine, Task, Reward, User } from './types';
@@ -19,6 +21,7 @@ const DashboardContext = createContext<DashboardState | null>(null);
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const accounts = useAccounts();
   const taskState = useTasks(); // F1
+  const routineState = useRoutines();
   const [selection, setSelection] = useState<{ userId: string; childId: string } | null>(null);
   const profiles = accounts.children.map(child => ({ ...child, parentId: accounts.userId ?? '' }));
   const child = accounts.role === 'parent'
@@ -44,8 +47,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     : taskState.tasks.filter(task => task.childId === ownerOfTasks);
   const tasks = tasksForDay(scoped, taskState.done, taskState.today);
 
-  // Routine and reward data will be connected with those features.
-  return <DashboardContext.Provider value={{ user, children: profiles, child, tasks, routines: [], rewards: [], chooseChild }}>
+  const routines = routineState.routines.filter(routine =>
+    (accounts.role !== 'parent' || !!child) && routine.childId === ownerOfTasks && routineOccursOn(routine, routineState.today));
+
+  // Rewards will be connected with that feature.
+  return <DashboardContext.Provider value={{ user, children: profiles, child, tasks, routines, rewards: [], chooseChild }}>
     {children}
   </DashboardContext.Provider>;
 }

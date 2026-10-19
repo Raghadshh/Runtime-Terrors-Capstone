@@ -65,13 +65,23 @@ describe("ChildDashboardScreen Component", () => {
     expect(Alert.alert).not.toHaveBeenCalled();
   });
 
-  it("shows availability message for routine details when routine card is pressed", async () => {
+  it("shows all routines assigned for today", async () => {
+    const current = (useMine as jest.Mock)();
+    (useMine as jest.Mock).mockReturnValue({ ...current, routines: [...current.routines,
+      { id: "r2", name: "Bedtime Routine", steps: [{ completed: false }] }] });
+    await render(<ChildDashboardScreen />);
+    expect(screen.getByText("Morning Routine")).toBeTruthy();
+    await fireEvent.press(screen.getByText("Bedtime Routine"));
+    expect(mockPush).toHaveBeenCalledWith("/routines/r2?childView=1");
+  });
+
+  it("opens child routine details when routine card is pressed", async () => {
     await render(<ChildDashboardScreen />);
 
     const routineCard = screen.getByText("Morning Routine");
     await fireEvent.press(routineCard);
 
-    expect(Alert.alert).toHaveBeenCalledWith("Coming soon", "This feature is not available yet.");
-      expect(mockPush).not.toHaveBeenCalled();
+    expect(mockPush).toHaveBeenCalledWith("/routines/r1?childView=1");
+    expect(Alert.alert).not.toHaveBeenCalled();
   });
 });

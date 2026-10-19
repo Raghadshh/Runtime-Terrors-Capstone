@@ -3,6 +3,7 @@ import { useFonts, Nunito_500Medium, Nunito_700Bold, Nunito_800ExtraBold } from 
 import { Stack } from 'expo-router';
 import { DashboardProvider } from '../src/shared/lib/dashboard';
 import { AccountsProvider } from '../src/features/accounts/AccountsContext';
+import { RoutinesProvider } from '../src/features/routines/RoutinesContext';
 import { TasksProvider } from '../src/features/tasks/TasksContext';
 
 export default function RootLayout() {
@@ -12,7 +13,7 @@ export default function RootLayout() {
   return (
     <AccountsProvider>
       <TasksProvider>
-        <DashboardProvider><Stack screenOptions={{ headerShown: false }} /></DashboardProvider>
+        <RoutinesProvider><DashboardProvider><Stack screenOptions={{ headerShown: false }} /></DashboardProvider></RoutinesProvider>
       </TasksProvider>
     </AccountsProvider>
   );

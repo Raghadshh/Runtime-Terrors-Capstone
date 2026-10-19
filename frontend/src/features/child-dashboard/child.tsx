@@ -19,8 +19,6 @@ export default function ChildDashboardScreen() {
   const { child, tasks, routines, user, rewards } = useMine();
   const open = tasks.filter((task) => !task.completed);
   const done = tasks.filter((task) => task.completed).length;
-  const routine = routines[0];
-  const routineDone = routine?.steps.filter((step) => step.completed).length ?? 0;
   const nextReward = rewards.find((reward) => reward.points > (user?.points ?? 0));
   const name = child?.name || user?.preferredName || user?.name || "Friend";
   return (
@@ -54,14 +52,14 @@ export default function ChildDashboardScreen() {
           <Text className="font-body text-[12px] text-mist">{formatClock(task.time)} • {task.durationMinutes} min</Text>
         </Card>
       ))}
-      {routine ? (
-        <Card onPress={() => router.push(`/routines/${routine.id}`)} className="mt-2">
+      {routines.map(routine => (
+        <Card key={routine.id} onPress={() => router.push(`/routines/${routine.id}?childView=1`)} className="mt-2">
           <Text className="font-body text-[12px] text-mist">Routine</Text>
           <Text className="font-strong text-[16px] text-ink">{routine.name}</Text>
-          <Text className="font-body text-[13px] text-ink">{routineDone} of {routine.steps.length} steps complete</Text>
-          <Text className="mt-1 font-strong text-[13px] text-sprout">Continue</Text>
+          <Text className="font-body text-[13px] text-ink">{routine.steps.filter(step => step.completed).length} of {routine.steps.length} steps complete</Text>
+          <Text className="mt-1 font-strong text-[13px] text-sprout">{routine.steps.length > 0 && routine.steps.every(step => step.completed) ? "Completed today" : "Continue"}</Text>
         </Card>
-      ) : null}
+      ))}
       <View className="mt-3 flex-row gap-3">
         <View className="flex-1 rounded-[20px] p-4" style={{ backgroundColor: "#FFF1B8" }}>
           <Text className="font-body text-[12px] text-mist">Points</Text>
