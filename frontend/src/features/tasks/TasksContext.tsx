@@ -22,7 +22,10 @@ import {
   updateTaskRow,
 } from "./taskApi";
 import { askForReminderPermission, syncTaskReminders } from "./reminders";
-import { saveTaskSteps as saveTaskStepsRow } from "./taskStepsApi";
+import {
+  saveTaskSteps as saveTaskStepsRow,
+  updateTaskStepCompletion,
+} from "./taskStepsApi";
 import { completionKey, planReminders, type TaskForm } from "./taskRules";
 
 type TasksState = {
@@ -36,6 +39,11 @@ type TasksState = {
   reload: () => Promise<void>;
   saveTask: (form: TaskForm, id?: string) => Promise<Task>;
   saveSteps: (taskId: string, steps: TaskStep[]) => Promise<void>;
+  updateStepCompletion: (
+    taskId: string,
+    stepId: string,
+    completed: boolean,
+  ) => Promise<void>;
   removeTask: (id: string) => Promise<void>;
   setDone: (taskId: string, iso: string, finished: boolean) => Promise<void>;
 };
@@ -53,6 +61,7 @@ const emptyState: TasksState = {
   removeTask: async () => undefined,
   setDone: async () => undefined,
   saveSteps: async () => {},
+  updateStepCompletion: async () => {},
 };
 
 const TasksContext = createContext<TasksState | null>(null);
@@ -71,29 +80,44 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       setDoneKeys(new Set());
       return;
     }
+
     const day = todayISO();
     setLoading(true);
+
     try {
-      const [nextTasks, nextDone] = await Promise.all([fetchTasks(), fetchCompletionKeys(day)]);
+      const [nextTasks, nextDone] = await Promise.all([
+        fetchTasks(),
+        fetchCompletionKeys(day),
+      ]);
+
       setTasks(nextTasks);
       setDoneKeys(nextDone);
       setToday(day);
       setError(null);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Tasks could not load. Check your connection.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Tasks could not load. Check your connection.",
+      );
     } finally {
       setLoading(false);
     }
   }, [userId]);
 
-  // Load on sign in, refresh when the app comes back to the front, and listen for edits from other devices.
+  // Load on sign in, refresh when the app comes back to the front,
+  // and listen for edits from other devices.
   useEffect(() => {
     void reload();
+
     if (!userId) return undefined;
+
     const unsubscribe = subscribeToTaskChanges(userId, () => void reload());
+
     const appState = AppState.addEventListener("change", (state) => {
       if (state === "active") void reload();
     });
+
     return () => {
       unsubscribe();
       appState.remove();
@@ -105,6 +129,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     () => Object.fromEntries(childProfiles.map((child) => [child.id, child.name])),
     [childProfiles],
   );
+
   useEffect(() => {
     if (!userId) return;
     void syncTaskReminders(planReminders(tasks, done, childNames));
@@ -113,54 +138,173 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   const saveTask = useCallback(
     async (form: TaskForm, id?: string) => {
       if (!userId) throw new Error("Log in to save tasks.");
-      const saved = id ? await updateTaskRow(id, form) : await insertTask(userId, form);
+
+      const saved = id
+        ? await updateTaskRow(id, form)
+        : await insertTask(userId, form);
+
       syncTaskTimerDuration(saved.id, saved.durationMinutes);
-      setTasks((current) => [...current.filter((task) => task.id !== saved.id), saved]);
+
+      setTasks((current) => [
+        ...current.filter((task) => task.id !== saved.id),
+        saved,
+      ]);
+
       if (form.reminderEnabled) await askForReminderPermission();
+
       return saved;
     },
     [userId],
   );
 
-  const saveSteps = useCallback(async (taskId: string, steps: TaskStep[]) => {
-    await saveTaskStepsRow(taskId, steps);
-    setTasks((current) => current.map((task) =>
-      task.id === taskId ? { ...task, steps: steps.map((step, position) => ({ ...step, position })) } : task
-    ));
-  }, []);
+  // Parent editing: save the entire ordered checklist.
+  const saveSteps = useCallback(
+    async (taskId: string, steps: TaskStep[]) => {
+      await saveTaskStepsRow(taskId, steps);
+
+      setTasks((current) =>
+        current.map((task) =>
+          task.id === taskId
+            ? {
+                ...task,
+                steps: steps.map((step, position) => ({
+                  ...step,
+                  position,
+                })),
+              }
+            : task,
+        ),
+      );
+    },
+    [],
+  );
+
+  // Child checklist: update only one step's completion status.
+  const updateStepCompletion = useCallback(
+    async (taskId: string, stepId: string, completed: boolean) => {
+      const task = tasks.find((item) => item.id === taskId);
+      const step = task?.steps.find((item) => item.id === stepId);
+
+      if (!task || !step) {
+        throw new Error("Task step not found.");
+      }
+
+      const previousCompleted = step.completed;
+
+      // Update the screen immediately.
+      setTasks((current) =>
+        current.map((item) =>
+          item.id === taskId
+            ? {
+                ...item,
+                steps: item.steps.map((itemStep) =>
+                  itemStep.id === stepId
+                    ? { ...itemStep, completed }
+                    : itemStep,
+                ),
+              }
+            : item,
+        ),
+      );
+
+      try {
+        await updateTaskStepCompletion(taskId, stepId, completed);
+      } catch (cause) {
+        // Restore the previous checkbox state if saving fails.
+        setTasks((current) =>
+          current.map((item) =>
+            item.id === taskId
+              ? {
+                  ...item,
+                  steps: item.steps.map((itemStep) =>
+                    itemStep.id === stepId
+                      ? { ...itemStep, completed: previousCompleted }
+                      : itemStep,
+                  ),
+                }
+              : item,
+          ),
+        );
+
+        throw cause;
+      }
+    },
+    [tasks],
+  );
 
   const removeTask = useCallback(async (id: string) => {
     await deleteTaskRow(id);
     setTasks((current) => current.filter((task) => task.id !== id));
   }, []);
 
-  const setDone = useCallback(async (taskId: string, iso: string, finished: boolean) => {
-    const key = completionKey(taskId, iso);
-    const update = (add: boolean) =>
-      setDoneKeys((current) => {
-        const next = new Set(current);
-        if (add) next.add(key);
-        else next.delete(key);
-        return next;
-      });
-    update(finished); // show the change right away
-    try {
-      if (finished) await markDone(taskId, iso);
-      else await markNotDone(taskId, iso);
-    } catch (cause) {
-      update(!finished); // undo if saving failed
-      throw cause;
-    }
-  }, []);
+  const setDone = useCallback(
+    async (taskId: string, iso: string, finished: boolean) => {
+      const key = completionKey(taskId, iso);
+
+      const update = (add: boolean) =>
+        setDoneKeys((current) => {
+          const next = new Set(current);
+          if (add) next.add(key);
+          else next.delete(key);
+          return next;
+        });
+
+      update(finished);
+
+      try {
+        if (finished) {
+          await markDone(taskId, iso);
+        } else {
+          await markNotDone(taskId, iso);
+        }
+      } catch (cause) {
+        update(!finished);
+        throw cause;
+      }
+    },
+    [],
+  );
 
   const value = useMemo(
-    () => ({ loading, error, tasks, done, today, reload, saveTask, saveSteps, removeTask, setDone }),
-    [loading, error, tasks, done, today, reload, saveTask, saveSteps, removeTask, setDone],
+    () => ({
+      loading,
+      error,
+      tasks,
+      done,
+      today,
+      reload,
+      saveTask,
+      saveSteps,
+      updateStepCompletion,
+      removeTask,
+      setDone,
+    }),
+    [
+      loading,
+      error,
+      tasks,
+      done,
+      today,
+      reload,
+      saveTask,
+      saveSteps,
+      updateStepCompletion,
+      removeTask,
+      setDone,
+    ],
   );
-  return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>;
+
+  return (
+    <TasksContext.Provider value={value}>
+      {children}
+    </TasksContext.Provider>
+  );
 }
 
-/** Task state. Returns an empty, read-only state when no TasksProvider is mounted (for example in other features' tests). */
+/**
+ * Task state. Returns an empty, read-only state when no TasksProvider
+ * is mounted (for example, in other features' tests).
+ */
 export function useTasks(): TasksState {
   return useContext(TasksContext) ?? emptyState;
 }

@@ -42,3 +42,21 @@ export async function saveTaskSteps(
 
   if (error) throw new Error(error.message);
 }
+
+/**
+ * Update only the completion status of one task step.
+ * Keeps the title and position unchanged.
+ */
+export async function updateTaskStepCompletion(
+  taskId: string,
+  stepId: string,
+  completed: boolean,
+): Promise<void> {
+  const { error } = await requireSupabase()
+    .from("task_steps")
+    .update({ completed })
+    .eq("task_id", taskId)
+    .eq("id", stepId);
+
+  if (error) throw new Error(error.message);
+}
