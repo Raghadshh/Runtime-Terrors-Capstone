@@ -6,7 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { AppState } from "react-native";
 
 import { todayISO } from "@/lib/format";
-import type { Task } from "@/lib/types";
+import type { Task, TaskStep } from "@/lib/types";
 
 import { syncTaskTimerDuration } from "../timer/countdownTimer";
 
@@ -22,6 +22,7 @@ import {
   updateTaskRow,
 } from "./taskApi";
 import { askForReminderPermission, syncTaskReminders } from "./reminders";
+import { saveTaskSteps as saveTaskStepsRow } from "./taskStepsApi";
 import { completionKey, planReminders, type TaskForm } from "./taskRules";
 
 type TasksState = {
@@ -34,6 +35,7 @@ type TasksState = {
   today: string;
   reload: () => Promise<void>;
   saveTask: (form: TaskForm, id?: string) => Promise<Task>;
+  saveSteps: (taskId: string, steps: TaskStep[]) => Promise<void>;
   removeTask: (id: string) => Promise<void>;
   setDone: (taskId: string, iso: string, finished: boolean) => Promise<void>;
 };
@@ -50,6 +52,7 @@ const emptyState: TasksState = {
   },
   removeTask: async () => undefined,
   setDone: async () => undefined,
+  saveSteps: async () => {},
 };
 
 const TasksContext = createContext<TasksState | null>(null);
@@ -119,6 +122,13 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     [userId],
   );
 
+  const saveSteps = useCallback(async (taskId: string, steps: TaskStep[]) => {
+    await saveTaskStepsRow(taskId, steps);
+    setTasks((current) => current.map((task) =>
+      task.id === taskId ? { ...task, steps: steps.map((step, position) => ({ ...step, position })) } : task
+    ));
+  }, []);
+
   const removeTask = useCallback(async (id: string) => {
     await deleteTaskRow(id);
     setTasks((current) => current.filter((task) => task.id !== id));
@@ -144,8 +154,8 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ loading, error, tasks, done, today, reload, saveTask, removeTask, setDone }),
-    [loading, error, tasks, done, today, reload, saveTask, removeTask, setDone],
+    () => ({ loading, error, tasks, done, today, reload, saveTask, saveSteps, removeTask, setDone }),
+    [loading, error, tasks, done, today, reload, saveTask, saveSteps, removeTask, setDone],
   );
   return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>;
 }

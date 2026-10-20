@@ -5,18 +5,30 @@ import type { Task } from "@/lib/types";
 
 import { requireSupabase, supabase } from "../accounts/supabase";
 import { rowFromForm, taskFromRow, type TaskForm, type TaskRow } from "./taskRules";
+import { fetchTaskSteps } from "./taskStepsApi";
 
 const TASK_COLUMNS =
   "id, user_id, child_id, title, description, category, date, time, duration_minutes, repeat_kind, repeat_days, reminder_enabled, reminder_offset, points";
 
 export async function fetchTasks(): Promise<Task[]> {
-  const { data, error } = await requireSupabase()
-    .from("tasks")
-    .select(TASK_COLUMNS)
-    .order("date")
-    .order("time");
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as TaskRow[]).map(taskFromRow);
+  const client = requireSupabase();
+  const [taskResult, steps] = await Promise.all([
+    client.from("tasks").select(TASK_COLUMNS).order("date").order("time"),
+    fetchTaskSteps(),
+  ]);
+  if (taskResult.error) throw new Error(taskResult.error.message);
+
+  const stepsByTask = new Map<string, typeof steps>();
+  for (const step of steps) {
+    const existing = stepsByTask.get(step.taskId) ?? [];
+    existing.push(step);
+    stepsByTask.set(step.taskId, existing);
+  }
+
+  return ((taskResult.data ?? []) as TaskRow[]).map((row) => ({
+    ...taskFromRow(row),
+    steps: stepsByTask.get(row.id) ?? [],
+  }));
 }
 
 /** Completion keys ("taskId|YYYY-MM-DD") from `fromIso` onward. */

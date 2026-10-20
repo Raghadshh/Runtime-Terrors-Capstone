@@ -106,6 +106,16 @@ export default function TaskDetailScreen({ taskId, childView = false }: { taskId
           {next ? `Available to complete on ${formatLongDate(next)}.` : 'This task has no upcoming scheduled days.'}
         </Text> : null}
       </View>
+      {!childView ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push(`/tasks/breakdown/${task.id}`)}
+          className="mt-3 items-center rounded-[14px] py-3"
+          style={{ backgroundColor: "#DDECF4" }}
+        >
+          <Text className="font-strong text-[14px] text-ink">Break Down Task</Text>
+        </Pressable>
+      ) : null}
       {!childView ? <View className="mt-3 flex-row gap-3">
         <Pressable accessibilityRole="button" onPress={() => router.push(`/tasks/edit/${task.id}`)} className="flex-1 items-center rounded-[12px] py-3" style={{ backgroundColor: '#FFF1B8' }}>
           <Text className="font-strong text-[14px] text-ink">Edit Task</Text>
