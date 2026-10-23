@@ -21,12 +21,12 @@ import {
   subscribeToTaskChanges,
   updateTaskRow,
 } from "./taskApi";
-import { askForReminderPermission, syncTaskReminders } from "./reminders";
+import { askForReminderPermission } from "./reminders";
 import {
   saveTaskSteps as saveTaskStepsRow,
   updateTaskStepCompletion,
 } from "./taskStepsApi";
-import { completionKey, planReminders, type TaskForm } from "./taskRules";
+import { completionKey, type TaskForm } from "./taskRules";
 
 type TasksState = {
   loading: boolean;
@@ -67,7 +67,7 @@ const emptyState: TasksState = {
 const TasksContext = createContext<TasksState | null>(null);
 
 export function TasksProvider({ children }: { children: ReactNode }) {
-  const { userId, children: childProfiles } = useAccounts();
+  const { userId } = useAccounts();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [done, setDoneKeys] = useState<Set<string>>(new Set());
   const [today, setToday] = useState(todayISO());
@@ -124,16 +124,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     };
   }, [userId, reload]);
 
-  // Keep the phone's reminders matching the latest tasks and completions.
-  const childNames = useMemo(
-    () => Object.fromEntries(childProfiles.map((child) => [child.id, child.name])),
-    [childProfiles],
-  );
-
-  useEffect(() => {
-    if (!userId) return;
-    void syncTaskReminders(planReminders(tasks, done, childNames));
-  }, [userId, tasks, done, childNames]);
+  // Reminders for tasks and routines are kept in sync by ReminderSync.tsx.
 
   const saveTask = useCallback(
     async (form: TaskForm, id?: string) => {

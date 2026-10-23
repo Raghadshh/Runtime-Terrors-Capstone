@@ -5,6 +5,7 @@ import { DashboardProvider } from '../src/shared/lib/dashboard';
 import { AccountsProvider } from '../src/features/accounts/AccountsContext';
 import { RoutinesProvider } from '../src/features/routines/RoutinesContext';
 import { TasksProvider } from '../src/features/tasks/TasksContext';
+import { ReminderSync } from '../src/features/tasks/ReminderSync';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({ Nunito_500Medium, Nunito_700Bold, Nunito_800ExtraBold });
@@ -13,7 +14,7 @@ export default function RootLayout() {
   return (
     <AccountsProvider>
       <TasksProvider>
-        <RoutinesProvider><DashboardProvider><Stack screenOptions={{ headerShown: false }} /></DashboardProvider></RoutinesProvider>
+        <RoutinesProvider><DashboardProvider><ReminderSync /><Stack screenOptions={{ headerShown: false }} /></DashboardProvider></RoutinesProvider>
       </TasksProvider>
     </AccountsProvider>
   );
