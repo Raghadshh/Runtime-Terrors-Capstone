@@ -1,8 +1,8 @@
-
 /**
  * F1 task details: what, when, repeat and reminder info, mark done for today (R9), edit and delete (R5).
  * Shows F14's countdown timer for the task's F15 duration.
  * F9 adds a saved checklist that parents and children can complete.
+ * F7 adds a "Just Start" button for a 5-minute session (R12).
  */
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -350,6 +350,23 @@ export default function TaskDetailScreen({
       ) : null}
 
       <View className="mt-2">
+        {/* F7 Just Start (R12): a 5-minute session to get going, with no pressure to finish. */}
+        {happensToday && !finishedToday ? (
+          <View className="mb-3">
+            <Button
+              label="Just Start · 5 min"
+              variant="secondary"
+              onPress={() =>
+                router.push(
+                  childView
+                    ? `/tasks/just-start/${task.id}?childView=1`
+                    : `/tasks/just-start/${task.id}`,
+                )
+              }
+            />
+          </View>
+        ) : null}
+
         <Button
           label={finishedToday ? "Completed today — Undo" : "Mark Complete"}
           disabled={!happensToday}
