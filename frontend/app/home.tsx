@@ -1,3 +1,6 @@
+/**
+ * Home route bridge and bottom navigation handler
+ */
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { Alert, Text } from 'react-native';
@@ -21,6 +24,7 @@ export default function Home() {
     if (name === 'profile') router.push('/profile');
     else if (name === 'tasks') router.push('/tasks');
     else if (name === 'routines') router.push('/routines');
+    else if (name === 'progress') router.push('/progress');
     else if (name !== 'home') Alert.alert('Coming soon', 'This feature is not available yet.');
   }
 

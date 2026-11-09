@@ -64,6 +64,7 @@ export interface Task {
   approvalStatus: ApprovalStatus;
   feedback: string;
   requiresPhoto: boolean;
+  completionPhotoUrl?: string | null; // Added for F18 photo verification support
   essential: boolean;
   steps: TaskStep[];
 }
@@ -133,6 +134,7 @@ export interface TaskDraft {
   steps: { title: string; completed: boolean }[];
   essential: boolean;
   requiresPhoto: boolean;
+  completionPhotoUrl?: string | null;
 }
 
 export interface Snapshot {

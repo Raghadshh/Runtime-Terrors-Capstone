@@ -27,18 +27,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const child = accounts.role === 'parent'
     ? profiles.find(profile => selection?.userId === accounts.userId && profile.id === selection.childId) ?? profiles[0] ?? null
     : null;
-  const user: User | null = accounts.userId && accounts.role ? {
-    id: accounts.userId, email: '', name: accounts.fullName, preferredName: accounts.preferredName,
-    accountType: accounts.role, points: 0, gardenPoints: 0, xp: 0, energy: 'normal', theme: 'cream',
-    notifications: true, textSize: 'comfortable', weeklyActivity: [],
-  } : null;
-
-  function chooseChild(id: string) {
-    if (!accounts.userId || accounts.role !== 'parent' || !profiles.some(profile => profile.id === id)) {
-      throw new Error('Choose one of your own child profiles.');
-    }
-    setSelection({ userId: accounts.userId, childId: id });
-  }
 
   // F1: today's tasks for the selected child (parents) or the user's own tasks (independent users).
   const ownerOfTasks = accounts.role === 'parent' ? child?.id ?? null : null;
@@ -50,8 +38,31 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const routines = routineState.routines.filter(routine =>
     (accounts.role !== 'parent' || !!child) && routine.childId === ownerOfTasks && routineOccursOn(routine, routineState.today));
 
+  const earnedTaskPoints = tasks.filter(t => t.completed).reduce((sum, t) => sum + (t.points ?? 5), 0);
+  const routinePoints = routines.reduce((sum, r) => sum + r.steps.filter(s => s.completed).length * 2, 0);
+  const totalPoints = earnedTaskPoints + routinePoints;
+
   // Rewards will be connected with that feature.
-  return <DashboardContext.Provider value={{ user, children: profiles, child, tasks, routines, rewards: [], chooseChild }}>
+  const rewards: Reward[] = [
+    { id: 'r1', userId: accounts.userId ?? '', childId: ownerOfTasks, name: 'Choose dinner', points: 80, description: 'Pick what is for dinner' },
+    { id: 'r2', userId: accounts.userId ?? '', childId: ownerOfTasks, name: 'Extra game time', points: 150, description: '30 extra minutes of screen time' },
+    { id: 'r3', userId: accounts.userId ?? '', childId: ownerOfTasks, name: 'Movie night', points: 200, description: 'Choose the weekend movie' },
+  ];
+
+  const user: User | null = accounts.userId && accounts.role ? {
+    id: accounts.userId, email: '', name: accounts.fullName, preferredName: accounts.preferredName,
+    accountType: accounts.role, points: totalPoints, gardenPoints: totalPoints, xp: totalPoints * 2, energy: 'normal', theme: 'cream',
+    notifications: true, textSize: 'comfortable', weeklyActivity: [],
+  } : null;
+
+  function chooseChild(id: string) {
+    if (!accounts.userId || accounts.role !== 'parent' || !profiles.some(profile => profile.id === id)) {
+      throw new Error('Choose one of your own child profiles.');
+    }
+    setSelection({ userId: accounts.userId, childId: id });
+  }
+
+  return <DashboardContext.Provider value={{ user, children: profiles, child, tasks, routines, rewards, chooseChild }}>
     {children}
   </DashboardContext.Provider>;
 }

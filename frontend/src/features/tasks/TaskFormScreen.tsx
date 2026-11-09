@@ -1,6 +1,7 @@
 /**
- * F1 create / edit task screen (R5, R6, R7, R8, R10 settings).
- * Uses F15's DurationPicker for "How long?".
+- F1 create / edit task screen (R5, R6, R7, R8, R10 settings).
+- Uses F15's DurationPicker for "How long?".
+- Includes F18 Require a completion photo" toggle support.
  */
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -48,9 +49,18 @@ export default function TaskFormScreen({ taskId }: { taskId?: string }) {
   const { tasks, saveTask } = useTasks();
   const existing = taskId ? tasks.find((task) => task.id === taskId) : undefined;
   const isParent = user?.accountType === "parent";
-  const [form, setForm] = useState<TaskForm>(() =>
-    existing ? formFromTask(existing) : emptyTaskForm(isParent ? child?.id ?? null : null),
-  );
+  
+  const [form, setForm] = useState<TaskForm>(() => {
+    const initialForm = existing ? formFromTask(existing) : emptyTaskForm(isParent ? child?.id ?? null : null);
+    if (existing) {
+      initialForm.requiresPhoto = Boolean(
+        (existing as any).requiresPhoto || 
+        (existing as any).requires_photo
+      );
+    }
+    return initialForm;
+  });
+
   const [errors, setErrors] = useState<TaskFormErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -79,7 +89,13 @@ export default function TaskFormScreen({ taskId }: { taskId?: string }) {
     setSaving(true);
     setSaveError(null);
     try {
-      const saved = await saveTask(form, existing?.id);
+      const payload = {
+        ...form,
+        requiresPhoto: form.requiresPhoto,
+        requires_photo: form.requiresPhoto,
+      };
+
+      const saved = await saveTask(payload as any, existing?.id);
       if (existing) router.back();
       else router.replace(`/tasks/${saved.id}`);
     } catch (cause) {
@@ -185,6 +201,23 @@ export default function TaskFormScreen({ taskId }: { taskId?: string }) {
           </ChipRow>
         </View>
       ) : null}
+
+      {/* F18: Require a completion photo switch matching Figma 12B */}
+      <FieldLabel>COMPLETION VERIFICATION</FieldLabel>
+      <View className="flex-row items-center justify-between rounded-[20px] px-4 py-3" style={{ backgroundColor: "#DDECF4" }}>
+        <View className="flex-1 pr-3">
+          <Text className="font-strong text-[15px] text-ink">Require a completion photo</Text>
+          <Text className="font-body text-[12px] text-mist">Optional • Ask your child to upload a picture.</Text>
+        </View>
+        <Switch
+          accessibilityLabel="Require a completion photo"
+          value={form.requiresPhoto}
+          onValueChange={(requiresPhoto) => {
+            console.log("PHOTO REQUIREMENT TOGGLED:", requiresPhoto);
+            set({ requiresPhoto });
+          }}
+        />
+      </View>
 
       <FieldLabel>POINTS FOR FINISHING</FieldLabel>
       <Stepper label="points" value={`${form.points} points`} onMinus={() => set({ points: Math.max(0, form.points - 1) })} onPlus={() => set({ points: Math.min(1000, form.points + 1) })} />

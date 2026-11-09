@@ -1,5 +1,5 @@
 /**
- * F1 Supabase calls. Row level security on the server decides what each adult can read or change.
+ * F1 Supabase calls. Row level security on the server decides what each adult can read or change[cite: 6].
  */
 import type { Task } from "@/lib/types";
 
@@ -8,7 +8,7 @@ import { rowFromForm, taskFromRow, type TaskForm, type TaskRow } from "./taskRul
 import { fetchTaskSteps } from "./taskStepsApi";
 
 const TASK_COLUMNS =
-  "id, user_id, child_id, title, description, category, date, time, duration_minutes, repeat_kind, repeat_days, reminder_enabled, reminder_offset, points";
+  "id, user_id, child_id, title, description, category, date, time, duration_minutes, repeat_kind, repeat_days, reminder_enabled, reminder_offset, points, requires_photo, completion_photo_url, approval_status";
 
 export async function fetchTasks(): Promise<Task[]> {
   const client = requireSupabase();
@@ -31,7 +31,7 @@ export async function fetchTasks(): Promise<Task[]> {
   }));
 }
 
-/** Completion keys ("taskId|YYYY-MM-DD") from `fromIso` onward. */
+/** Completion keys ("taskId|YYYY-MM-DD") from `fromIso` onward[cite: 6]. */
 export async function fetchCompletionKeys(fromIso: string): Promise<Set<string>> {
   const { data, error } = await requireSupabase()
     .from("task_completions")
@@ -85,7 +85,7 @@ export async function markNotDone(taskId: string, iso: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-/** Calls `onChange` when any of this adult's tasks change on another device. */
+/** Calls `onChange` when any of this adult's tasks change on another device[cite: 6]. */
 export function subscribeToTaskChanges(userId: string, onChange: () => void): () => void {
   const client = supabase;
   if (!client) return () => undefined;
