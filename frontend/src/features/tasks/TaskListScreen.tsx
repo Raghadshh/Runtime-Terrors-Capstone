@@ -26,9 +26,13 @@ export default function TaskListScreen() {
   const { tasks, loading, error, setDone, today } = useTasks();
   const [tab, setTab] = useState<"Today" | "Upcoming" | "Completed" | "All">("Today");
   const [saveError, setSaveError] = useState<string | null>(null);
+  
   const isParent = user?.accountType === "parent";
   const ownerId = isParent ? child?.id ?? null : null;
   const allTasks = isParent && !ownerId ? [] : tasks.filter((task) => task.childId === ownerId);
+
+  // Count pending items exclusively for photo-verification tasks requiring review
+  const pendingCount = tasks.filter((t) => t.requiresPhoto && t.approvalStatus === "pending").length;
 
   async function toggle(task: Task) {
     try {
@@ -55,6 +59,22 @@ export default function TaskListScreen() {
     </Pressable>}>
       <Header title="Tasks" />
       <Text className="mb-3 font-body text-[13px] text-mist">{isParent ? child ? `Assigned to ${child.name}` : 'Parent account' : 'Your personal tasks'}</Text>
+      
+      {/* Figma 11A: Parent Approval Queue Banner */}
+      {isParent ? (
+        <Pressable 
+          accessibilityRole="button" 
+          onPress={() => router.push('/tasks/approval-queue')} 
+          className="mb-4 rounded-[18px] p-4 items-center border border-[#E6DBB2]" 
+          style={{ backgroundColor: "#FFF1B8" }}
+        >
+          <Text className="font-strong text-[15px] text-ink">
+            Review Approval Queue {pendingCount > 0 ? `(${pendingCount})` : ""}
+          </Text>
+          <Text className="font-body text-[12px] text-mist mt-0.5">Check pictures submitted by your children.</Text>
+        </Pressable>
+      ) : null}
+
       {isParent && !child ? <EmptyState title="Add a child first" body="Tasks for children need a child profile." action="Manage children" onAction={() => router.push('/children')} /> : null}
       <View className="mb-4 flex-row rounded-[14px] bg-white p-1">
         {(['Today', 'Upcoming', 'Completed'] as const).map(label => <Pressable key={label} accessibilityRole="tab" accessibilityState={{ selected: tab === label }} onPress={() => setTab(label)} className={`flex-1 items-center rounded-[12px] py-3 ${tab === label ? 'bg-leaf' : ''}`}>
@@ -75,6 +95,16 @@ export default function TaskListScreen() {
             <View className="h-12 w-12 items-center justify-center rounded-[14px]" style={{ backgroundColor: group.color }}><TasksIcon size={27} /></View>
             <Pressable accessibilityRole="button" onPress={() => router.push(`/tasks/${task.id}`)} className="flex-1">
               <Text className={`font-strong text-[16px] text-ink ${task.completed ? 'line-through' : ''}`}>{task.title}</Text>
+              
+              {/* Approval status indicator strictly restricted to tasks with uploaded review photos */}
+              {task.requiresPhoto && task.completionPhotoUrl && task.approvalStatus && task.approvalStatus !== "none" ? (
+                <View className="mt-1 self-start rounded-full px-2 py-0.5 bg-[#FFF1B8]">
+                  <Text className="font-strong text-[10px] text-ink uppercase">
+                    {task.approvalStatus === "pending" ? "Waiting for review" : task.approvalStatus === "approved" ? "Approved" : "Needs changes"}
+                  </Text>
+                </View>
+              ) : null}
+
               <View className="mt-1 flex-row items-center gap-1"><ClockIcon size={13} /><Text className="font-body text-[12px] text-ink">{formatClock(task.time)} · {task.durationMinutes} min</Text></View>
               <Text className="mt-1 font-body text-[11px] text-mist">{(tab === 'Upcoming' || tab === 'All') ? formatLongDate(nextOccurrence(task, today) ?? task.date) : repeatSummary(task.repeatKind, task.repeatDays)}</Text>
             </Pressable>

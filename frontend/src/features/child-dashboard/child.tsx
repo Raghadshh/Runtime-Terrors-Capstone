@@ -19,7 +19,11 @@ export default function ChildDashboardScreen() {
   const { child, tasks, routines, user, rewards } = useMine();
   const open = tasks.filter((task) => !task.completed);
   const done = tasks.filter((task) => task.completed).length;
-  const nextReward = rewards.find((reward) => reward.points > (user?.points ?? 0));
+  
+  const currentPoints = user?.points ?? 0;
+  const nextReward = rewards.find((reward) => reward.points > currentPoints);
+  const pointsAway = nextReward ? nextReward.points - currentPoints : 0;
+  
   const name = child?.name || user?.preferredName || user?.name || "Friend";
   return (
     <Screen>
@@ -61,13 +65,18 @@ export default function ChildDashboardScreen() {
         </Card>
       ))}
       <View className="mt-3 flex-row gap-3">
-        <View className="flex-1 rounded-[20px] p-4" style={{ backgroundColor: "#FFF1B8" }}>
+        <View className="flex-1 rounded-[20px] p-4 bg-[#FFF8D6]">
           <Text className="font-body text-[12px] text-mist">Points</Text>
-          <Text className="font-strong text-[18px] text-ink">{user?.points ?? 0}</Text>
+          <View className="mt-1 flex-row items-center gap-2">
+            <SvgXml xml={dashboardArt.star} width={18} height={18} />
+            <Text className="font-strong text-[20px] text-ink">{currentPoints}</Text>
+          </View>
         </View>
-        <Pressable accessibilityRole="button" onPress={() => router.push("/progress/rewards")} className="flex-1 rounded-[20px] p-4" style={{ backgroundColor: "#E3F0DD" }}>
+        <Pressable accessibilityRole="button" onPress={() => router.push("/progress/rewards")} className="flex-1 rounded-[20px] p-4 bg-[#FCE4E1]">
           <Text className="font-body text-[12px] text-mist">Next reward</Text>
-          <Text className="font-body text-[13px] text-ink">{nextReward ? `${nextReward.points - (user?.points ?? 0)} points away` : rewards.length ? "All unlocked" : "No rewards yet"}</Text>
+          <Text className="mt-1 font-strong text-[14px] text-ink">
+            {nextReward ? `${pointsAway} points away` : rewards.length ? "All unlocked" : "No rewards yet"}
+          </Text>
         </Pressable>
       </View>
       <View className="mt-4 flex-row items-center justify-between rounded-[20px] p-4" style={{ backgroundColor: "#F8D8CF" }}>

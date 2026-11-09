@@ -1,9 +1,9 @@
 /**
- * F1 Tasks & Reminders: rules with no screens or network calls, so they are easy to unit test.
- * Repeat days use 0 = Monday ... 6 = Sunday, the same as DAY_LABELS in lib/format.
+- F1 Tasks & Reminders: rules with no screens or network calls, so they are easy to unit test.
+- Repeat days use 0 = Monday ... 6 = Sunday, the same as DAY_LABELS in lib/format.
  */
 import { addDays, formatClock, todayISO } from "@/lib/format";
-import type { RepeatKind, Task } from "@/lib/types";
+import type { RepeatKind, Task, ApprovalStatus } from "@/lib/types";
 
 import { parseDuration } from "./timeDuration";
 
@@ -28,6 +28,7 @@ export interface TaskForm {
   reminderEnabled: boolean;
   reminderOffset: number;
   points: number;
+  requiresPhoto: boolean; // F18: Whether photo verification is required upon completion
 }
 
 export type TaskFormErrors = Partial<Record<keyof TaskForm, string>>;
@@ -48,6 +49,9 @@ export interface TaskRow {
   reminder_enabled: boolean;
   reminder_offset: number;
   points: number;
+  requires_photo?: boolean; // F18 database column
+  approval_status?: ApprovalStatus;
+  completion_photo_url?: string | null;
 }
 
 export function emptyTaskForm(childId: string | null, now = new Date()): TaskForm {
@@ -65,6 +69,7 @@ export function emptyTaskForm(childId: string | null, now = new Date()): TaskFor
     reminderEnabled: true,
     reminderOffset: 0,
     points: 5,
+    requiresPhoto: false,
   };
 }
 
@@ -81,6 +86,7 @@ export function formFromTask(task: Task): TaskForm {
     reminderEnabled: task.reminderEnabled,
     reminderOffset: task.reminderOffset,
     points: task.points,
+    requiresPhoto: task.requiresPhoto ?? false,
   };
 }
 
@@ -126,6 +132,7 @@ export function rowFromForm(form: TaskForm): Omit<TaskRow, "id" | "user_id" | "c
     reminder_enabled: form.reminderEnabled,
     reminder_offset: form.reminderEnabled ? form.reminderOffset : 0,
     points: form.points,
+    requires_photo: form.requiresPhoto,
   };
 }
 
@@ -149,10 +156,10 @@ export function taskFromRow(row: TaskRow): Task {
     completedAt: null,
     points: row.points,
     notificationId: null,
-    // Owned by later features (F9, F13). Safe defaults until they add their columns.
-    approvalStatus: "none",
+    approvalStatus: row.approval_status ?? "none",
     feedback: "",
-    requiresPhoto: false,
+    requiresPhoto: row.requires_photo ?? false,
+    completionPhotoUrl: row.completion_photo_url ?? null,
     essential: false,
     steps: [],
   };

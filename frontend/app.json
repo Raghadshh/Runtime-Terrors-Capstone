@@ -10,6 +10,9 @@
       "expo-router",
       "expo-sqlite",
       "expo-font"
-    ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.anonymous.remindme"
+    }
   }
 }

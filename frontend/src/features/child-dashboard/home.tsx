@@ -36,7 +36,7 @@ function ParentHome({ bottomBar }: { bottomBar?: ReactNode }) {
   const routineDone = routines.reduce((sum, routine) => sum + routine.steps.filter((step) => step.completed).length, 0);
   const routineTotal = routines.reduce((sum, routine) => sum + routine.steps.length, 0);
   const stars = rewards.reduce((max, reward) => Math.max(max, reward.points), 15);
-  const earned = Math.min(user?.points ?? 0, stars);
+  const earned = user?.points ?? 0;
   const name = user?.preferredName || user?.name || "Jamie";
 
   return (
@@ -108,9 +108,9 @@ function ParentHome({ bottomBar }: { bottomBar?: ReactNode }) {
         </Pressable>
         <Pressable accessibilityRole="button" onPress={() => router.push("/progress/rewards")} className="flex-1 rounded-[20px] p-4" style={{ backgroundColor: "#F8D8CF" }}>
           <View className="flex-row items-center gap-2"><SvgXml xml={dashboardArt.star} /><Text className="font-strong text-[15px] text-ink">Rewards</Text></View>
-          <Text className="mt-1 font-body text-[12px] text-ink">{earned} of {stars} stars</Text>
+          <Text className="mt-1 font-body text-[12px] text-ink">{earned} points earned</Text>
           <View className="mt-3">
-            <ProgressBar percent={stars === 0 ? 0 : Math.round((earned / stars) * 100)} fillClassName="bg-[#FFD66B]" />
+            <ProgressBar percent={stars === 0 ? 0 : Math.min(100, Math.round((earned / stars) * 100))} fillClassName="bg-[#FFD66B]" />
           </View>
         </Pressable>
       </View>
