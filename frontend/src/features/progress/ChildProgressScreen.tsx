@@ -11,10 +11,11 @@ import { Card } from "@/components/card";
 import { Screen } from "@/components/screen";
 import { ProgressBar } from "@/components/progress";
 import { useMine } from "@/lib/dashboard";
+import { ProgressOverview } from "./ProgressOverview";
 
 export default function ChildProgressScreen() {
   const router = useRouter();
-  const { child, tasks, routines } = useMine();
+  const { child } = useMine();
   
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedType, setSelectedType] = useState<'nice' | 'keep' | 'proud'>('nice');
@@ -26,37 +27,13 @@ export default function ChildProgressScreen() {
     { text: "“Keep going — one step at a time.”", time: "Sent Monday at 4:10 PM", bgClass: "bg-[#E4EFE4]" },
   ]);
 
-  const completedTasksCount = tasks.filter((t) => t.completed).length;
-  const totalTasksCount = Math.max(tasks.length, 30);
-  const taskPercent = totalTasksCount === 0 ? 0 : Math.round((completedTasksCount / totalTasksCount) * 100);
-
-  const completedRoutinesCount = routines.filter((r) => r.status === "complete").length;
-  const inProgressRoutinesCount = routines.filter((r) => r.status === "active" || r.status === "ready").length;
+  // F5: real task and routine progress now comes from <ProgressOverview /> below.
 
   const currentPoints = 170;
   const targetPoints = 200;
   const rewardPercent = Math.min(100, Math.round((currentPoints / targetPoints) * 100));
   const activeRewardName = "Movie Night";
   const pointsNeeded = Math.max(0, targetPoints - currentPoints);
-
-  const daysOfWeek = ["M", "T", "W", "T", "F", "S", "S"];
-  
-  const weeklyBars = daysOfWeek.map((dayLabel, index) => {
-    const dayCompletedCount = tasks.filter((t) => {
-      if (!t.completedAt) return false;
-      const taskDayIndex = new Date(t.completedAt).getDay();
-      const adjustedIndex = taskDayIndex === 0 ? 6 : taskDayIndex - 1;
-      return adjustedIndex === index;
-    }).length;
-
-    const calculatedHeight = Math.min(Math.max(dayCompletedCount * 15, 25), 90);
-
-    return {
-      day: dayLabel,
-      height: calculatedHeight,
-      count: dayCompletedCount,
-    };
-  });
 
   const handleSend = () => {
     const newEntry = {
@@ -84,19 +61,8 @@ export default function ChildProgressScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-        <Text className="mb-2 font-strong text-[14px] text-ink">This week</Text>
-        <View className="mb-4 flex-row gap-3">
-          <Card className="flex-1">
-            <Text className="font-strong text-[11px] text-mist">TASKS COMPLETE</Text>
-            <Text className="my-1 font-strong text-[22px] text-ink">{completedTasksCount} / {totalTasksCount}</Text>
-            <Text className="font-body text-[11px] text-sprout">{taskPercent}% completed</Text>
-          </Card>
-          <Card className="flex-1">
-            <Text className="font-strong text-[11px] text-mist">ROUTINES</Text>
-            <Text className="my-1 font-strong text-[22px] text-ink">{completedRoutinesCount} / 14</Text>
-            <Text className="font-body text-[11px] text-mist">{inProgressRoutinesCount} in progress</Text>
-          </Card>
-        </View>
+        {/* F5 (R19, R20): consistency, this week, all-time totals, weekly activity, recently completed */}
+        <ProgressOverview ownerId={child?.id ?? null} />
 
         {/* Reward Progress Card */}
         <Card className="mb-4">
@@ -107,22 +73,6 @@ export default function ChildProgressScreen() {
           <Text className="font-body text-[12px] text-mist">
             {currentPoints} / {targetPoints} points • {pointsNeeded} points until {activeRewardName}
           </Text>
-        </Card>
-
-        {/* Weekly Activity Bars Card */}
-        <Card className="mb-4">
-          <Text className="mb-4 font-strong text-[13px] text-ink">Weekly activity</Text>
-          <View className="flex-row items-end justify-between px-2 pt-4" style={{ height: 110 }}>
-            {weeklyBars.map((bar, idx) => (
-              <View key={idx} className="items-center">
-                <View 
-                  className="w-7 rounded-t-[6px]" 
-                  style={{ height: bar.height, backgroundColor: "#6A9A78" }} 
-                />
-                <Text className="mt-2 font-strong text-[11px] text-mist">{bar.day}</Text>
-              </View>
-            ))}
-          </View>
         </Card>
 
         {/* Send Encouragement Action */}
