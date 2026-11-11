@@ -2,6 +2,7 @@ import type { Routine, RoutineStep } from '@/lib/types';
 
 export type StepDraft = { id: string; title: string; minutes: number };
 export type RoutineDraft = {
+  points?: number;
   name: string;
   subtitle: string;
   days: number[];
@@ -10,6 +11,7 @@ export type RoutineDraft = {
   steps: StepDraft[];
 };
 export type RoutineRow = {
+  points?: number;
   id: string; user_id: string; child_id: string | null; name: string;
   subtitle: string; days: number[]; time: string;
 };
@@ -24,6 +26,7 @@ export function validRoutineTime(time: string): boolean {
 export function validateRoutine(draft: RoutineDraft): string | null {
   if (!draft.name.trim() || draft.name.trim().length > 100) return 'Enter a routine name from 1 to 100 characters.';
   if (draft.subtitle.length > 200) return 'Keep the description under 201 characters.';
+  if (!Number.isInteger(draft.points ?? 10) || (draft.points ?? 10) < 0 || (draft.points ?? 10) > 1000) return 'Points must be a whole number from 0 to 1000.';
   if (!validRoutineTime(draft.time)) return 'Enter a time like 07:30 or 18:30.';
   if (!draft.days.length || draft.days.length > 7 || new Set(draft.days).size !== draft.days.length ||
       draft.days.some(day => !Number.isInteger(day) || day < 0 || day > 6)) return 'Choose at least one repeat day.';
@@ -48,6 +51,7 @@ export function routineFromRows(row: RoutineRow, rows: StepRow[], completed: Set
       position: step.position, completed: completed.has(step.id) }));
   const activeIndex = steps.findIndex(step => !step.completed);
   return {
+    points: row.points ?? 10,
     id: row.id, userId: row.user_id, childId: row.child_id, name: row.name, subtitle: row.subtitle,
     days: row.days, time: row.time.slice(0, 5), steps,
     status: steps.length > 0 && activeIndex < 0 ? 'complete' : steps.some(step => step.completed) ? 'active' : 'ready',
@@ -56,7 +60,7 @@ export function routineFromRows(row: RoutineRow, rows: StepRow[], completed: Set
 }
 
 export function routineDraft(routine: Routine): RoutineDraft {
-  return { name: routine.name, subtitle: routine.subtitle, childId: routine.childId,
+  return { points: routine.points ?? 10, name: routine.name, subtitle: routine.subtitle, childId: routine.childId,
     time: routine.time, days: [...routine.days],
     steps: routine.steps.map(step => ({ id: step.id, title: step.title, minutes: step.minutes })) };
 }

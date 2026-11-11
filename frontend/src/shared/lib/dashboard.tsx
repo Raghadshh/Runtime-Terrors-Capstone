@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
+import { usePoints } from '../../features/points/usePoints';
 
 import { useAccounts } from '../../features/accounts/AccountsContext';
 import { useRoutines } from '../../features/routines/RoutinesContext';
@@ -23,6 +24,11 @@ type DashboardState = {
   tasks: Task[];
   routines: Routine[];
   rewards: Reward[];
+  redemptions: ReturnType<typeof usePoints>['redemptions'];
+  redeemReward: ReturnType<typeof usePoints>['redeemReward'];
+  reloadPoints: () => Promise<void>;
+  pointsLoading: boolean;
+  pointsError: string | null;
   rewardsLoading: boolean;
   rewardsError: string | null;
   chooseChild: (id: string) => void;
@@ -57,6 +63,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const totalPoints = earnedTaskPoints + routinePoints;
 
   const owner = accounts.userId ?? '';
+  const pointsRevision = JSON.stringify([
+    [...taskState.done].sort(),
+    taskState.tasks.map(task => [task.id, task.approvalStatus]),
+    routineState.routines.map(routine => [routine.id, routine.steps.map(step => step.completed)]),
+  ]);
+  const pointState = usePoints(owner, ownerOfTasks, pointsRevision);
   const [rewardSnapshot, setRewardSnapshot] = useState<{ owner: string; items: Reward[] } | null>(null);
   const [rewardsLoading, setRewardsLoading] = useState(false);
   const [rewardsError, setRewardsError] = useState<string | null>(null);
@@ -144,7 +156,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const user: User | null = accounts.userId && accounts.role ? {
     id: accounts.userId, email: '', name: accounts.fullName, preferredName: accounts.preferredName,
-    accountType: accounts.role, points: totalPoints, gardenPoints: totalPoints, xp: totalPoints * 2, energy: 'normal', theme: 'cream',
+    accountType: accounts.role, points: pointState.balance, gardenPoints: totalPoints, xp: totalPoints * 2, energy: 'normal', theme: 'cream',
     notifications: true, textSize: 'comfortable', weeklyActivity: [],
   } : null;
 
@@ -158,6 +170,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   return <DashboardContext.Provider value={{
     user, children: profiles, child, tasks, routines, rewards, rewardsLoading, rewardsError,
     chooseChild, saveReward, removeReward,
+    redemptions: pointState.redemptions, redeemReward: pointState.redeemReward,
+    reloadPoints: pointState.reloadPoints, pointsLoading: pointState.pointsLoading, pointsError: pointState.pointsError,
   }}>
     {children}
   </DashboardContext.Provider>;

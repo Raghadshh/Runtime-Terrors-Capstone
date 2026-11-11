@@ -6,7 +6,7 @@ export async function fetchRoutineData(iso: string): Promise<{
 }> {
   const client = requireSupabase();
   const [routines, steps, completions] = await Promise.all([
-    client.from('routines').select('id,user_id,child_id,name,subtitle,days,time').order('created_at'),
+    client.from('routines').select('id,user_id,child_id,name,subtitle,days,time,points').order('created_at'),
     client.from('routine_steps').select('id,routine_id,title,minutes,position').order('position'),
     client.from('routine_step_completions').select('step_id,occurrence_date').eq('occurrence_date', iso),
   ]);
@@ -16,7 +16,8 @@ export async function fetchRoutineData(iso: string): Promise<{
 }
 
 export async function saveRoutineRow(draft: RoutineDraft, id?: string): Promise<string> {
-  const { data, error } = await requireSupabase().rpc('save_routine', {
+  const { data, error } = await requireSupabase().rpc('save_routine_with_points', {
+    p_points: draft.points ?? 10,
     p_id: id ?? null, p_name: draft.name.trim(), p_subtitle: draft.subtitle.trim(),
     p_days: [...draft.days].sort(), p_time: draft.time, p_child_id: draft.childId,
     p_steps: draft.steps.map(step => ({ ...step, title: step.title.trim() })),

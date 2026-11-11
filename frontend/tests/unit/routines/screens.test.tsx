@@ -128,3 +128,18 @@ test('schedule editor rejects invalid times and saves an updated start time', as
   await fireEvent.press(screen.getByRole('button', { name: 'Save Routine' }));
   await waitFor(() => expect(mockSave).toHaveBeenCalledWith(expect.objectContaining({ time: '08:30' }), 'r1'));
 });
+
+test('editing saves the configured routine point amount', async () => {
+  await render(<RoutineFormScreen routineId="r1" />);
+  await fireEvent.changeText(screen.getByLabelText('Points for completing this routine'), '37');
+  await fireEvent.press(screen.getByRole('button', { name: 'Save Routine' }));
+  await waitFor(() => expect(mockSave).toHaveBeenCalledWith(expect.objectContaining({ points: 37 }), 'r1'));
+});
+
+test.each(['', '-1', '2.5', '1001'])('invalid routine points are not saved: %s', async value => {
+  await render(<RoutineFormScreen routineId="r1" />);
+  await fireEvent.changeText(screen.getByLabelText('Points for completing this routine'), value);
+  await fireEvent.press(screen.getByRole('button', { name: 'Save Routine' }));
+  expect(mockSave).not.toHaveBeenCalled();
+  expect(await screen.findByText('Points must be a whole number from 0 to 1000.')).toBeTruthy();
+});
