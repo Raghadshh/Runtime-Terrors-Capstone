@@ -94,10 +94,21 @@ export interface Routine {
 export interface Reward {
   id: string;
   userId: string;
+  /** @deprecated Single-child value kept for older rows. Use `childIds`. */
   childId: string | null;
+  /** Children who can redeem this reward. An empty list means everyone. */
+  childIds?: string[];
   name: string;
   points: number;
   description: string;
+}
+
+export interface RewardDraft {
+  name: string;
+  points: number;
+  description: string;
+  /** Children who can redeem this reward. An empty list means everyone. */
+  childIds: string[];
 }
 
 export interface GardenItem {

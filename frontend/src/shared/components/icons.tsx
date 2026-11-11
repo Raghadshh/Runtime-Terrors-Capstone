@@ -59,10 +59,38 @@ export function BackIcon({ color = "#294A60" }: IconProps) {
   );
 }
 
-export function CheckIcon({ color = "#2C7A4B" }: IconProps) {
+export function CheckIcon({ color = "#2C7A4B", size = 14 }: IconProps) {
   return (
-    <Svg width={14} height={14} viewBox="0 0 14 14" fill="none">
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
       <Path d="M2.5 7.2 5.4 10 11.5 3.8" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+interface StarIconProps extends IconProps {
+  stroke?: string;
+}
+
+export function StarIcon({ color = "#FFD66B", size = 22, stroke }: StarIconProps) {
+  return (
+    <Svg width={size} height={size * (27 / 28)} viewBox="0 0 28 27" fill="none">
+      <Path
+        d="M14 0L18 9L28 10L20 17L22 27L14 22L5 27L7 17L0 10L10 9L14 0Z"
+        fill={color}
+        stroke={stroke}
+        strokeWidth={stroke ? 0.9 : 0}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function LockIcon({ color = "#557186", size = 18 }: IconProps) {
+  return (
+    <Svg width={size * (16 / 24)} height={size} viewBox="0 0 16 24" fill="none">
+      <Path d="M4.5 10V6a3.5 3.5 0 0 1 7 0v4" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
+      <Rect x="2" y="9.5" width="12" height="12.5" rx="3" stroke={color} strokeWidth={1.7} />
+      <Path d="M8 14.5v3" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
     </Svg>
   );
 }

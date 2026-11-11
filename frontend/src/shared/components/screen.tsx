@@ -22,18 +22,25 @@ interface ScreenProps {
   scroll?: boolean;
   bottomContent?: ReactNode;
   bottomBar?: ReactNode;
+  /** Horizontal page gutter in dp. Defaults to the app-wide 28dp gutter. */
+  contentPadding?: number;
 }
 
-export function Screen({ children, footer, bottomContent, bottomBar, scroll = true }: ScreenProps) {
+export function Screen({ children, footer, bottomContent, bottomBar, scroll = true, contentPadding = 28 }: ScreenProps) {
   const { session, syncNote } = useRemind();
   const background = screenThemes[session?.theme ?? "cream"];
   const body = scroll ? (
-    <ScrollView className="flex-1" contentContainerClassName="px-7 pb-8" keyboardShouldPersistTaps="handled">
+    <ScrollView
+      className="flex-1"
+      contentContainerClassName="pb-8"
+      contentContainerStyle={{ paddingHorizontal: contentPadding }}
+      keyboardShouldPersistTaps="handled"
+    >
       {syncNote ? <Text className="mb-3 font-body text-[13px] text-mist">{syncNote}</Text> : null}
       {children}
     </ScrollView>
   ) : (
-    <View className="flex-1 px-7">
+    <View className="flex-1" style={{ paddingHorizontal: contentPadding }}>
       {syncNote ? <Text className="mb-3 font-body text-[13px] text-mist">{syncNote}</Text> : null}
       {children}
     </View>

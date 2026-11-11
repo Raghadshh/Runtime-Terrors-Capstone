@@ -55,6 +55,13 @@ describe("ChildDashboardScreen Component", () => {
     expect(screen.getByText("10 points away")).toBeTruthy();
   });
 
+  it("opens rewards in read-only mode", async () => {
+    await render(<ChildDashboardScreen />);
+
+    await fireEvent.press(screen.getByText("Next reward"));
+    expect(mockPush).toHaveBeenCalledWith("/progress/rewards?childView=1");
+  });
+
   it("opens task details when an open task card is tapped", async () => {
     await render(<ChildDashboardScreen />);
 

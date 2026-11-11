@@ -72,7 +72,7 @@ export default function ChildDashboardScreen() {
             <Text className="font-strong text-[20px] text-ink">{currentPoints}</Text>
           </View>
         </View>
-        <Pressable accessibilityRole="button" onPress={() => router.push("/progress/rewards")} className="flex-1 rounded-[20px] p-4 bg-[#FCE4E1]">
+        <Pressable accessibilityRole="button" onPress={() => router.push("/progress/rewards?childView=1")} className="flex-1 rounded-[20px] p-4 bg-[#FCE4E1]">
           <Text className="font-body text-[12px] text-mist">Next reward</Text>
           <Text className="mt-1 font-strong text-[14px] text-ink">
             {nextReward ? `${pointsAway} points away` : rewards.length ? "All unlocked" : "No rewards yet"}

@@ -1,10 +1,20 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { AppState } from 'react-native';
+
 import { useAccounts } from '../../features/accounts/AccountsContext';
 import { useRoutines } from '../../features/routines/RoutinesContext';
 import { routineOccursOn } from '../../features/routines/routineRules';
 import { useTasks } from '../../features/tasks/TasksContext'; // F1
 import { tasksForDay } from '../../features/tasks/taskRules'; // F1
-import type { ChildProfile, Routine, Task, Reward, User } from './types';
+import {
+  deleteReward as deleteRewardRow,
+  fetchRewards,
+  insertReward,
+  subscribeToRewardChanges,
+  updateReward,
+} from '../../features/progress/rewardApi';
+import { presetRewardsFor, rewardAppliesToChild, validateRewardDraft } from '../../features/progress/rewardRules';
+import type { ChildProfile, Reward, Routine, Task, RewardDraft, User } from './types';
 
 type DashboardState = {
   user: User | null;
@@ -13,7 +23,11 @@ type DashboardState = {
   tasks: Task[];
   routines: Routine[];
   rewards: Reward[];
+  rewardsLoading: boolean;
+  rewardsError: string | null;
   chooseChild: (id: string) => void;
+  saveReward: (draft: RewardDraft, id?: string) => Promise<string>;
+  removeReward: (id: string) => Promise<void>;
 };
 const DashboardContext = createContext<DashboardState | null>(null);
 
@@ -42,12 +56,91 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const routinePoints = routines.reduce((sum, r) => sum + r.steps.filter(s => s.completed).length * 2, 0);
   const totalPoints = earnedTaskPoints + routinePoints;
 
-  // Rewards will be connected with that feature.
-  const rewards: Reward[] = [
-    { id: 'r1', userId: accounts.userId ?? '', childId: ownerOfTasks, name: 'Choose dinner', points: 80, description: 'Pick what is for dinner' },
-    { id: 'r2', userId: accounts.userId ?? '', childId: ownerOfTasks, name: 'Extra game time', points: 150, description: '30 extra minutes of screen time' },
-    { id: 'r3', userId: accounts.userId ?? '', childId: ownerOfTasks, name: 'Movie night', points: 200, description: 'Choose the weekend movie' },
-  ];
+  const owner = accounts.userId ?? '';
+  const [rewardSnapshot, setRewardSnapshot] = useState<{ owner: string; items: Reward[] } | null>(null);
+  const [rewardsLoading, setRewardsLoading] = useState(false);
+  const [rewardsError, setRewardsError] = useState<string | null>(null);
+
+  // Load reward goals from Supabase and keep them fresh across devices.
+  useEffect(() => {
+    let active = true;
+
+    if (!owner) {
+      setRewardSnapshot(null);
+      setRewardsLoading(false);
+      setRewardsError(null);
+      return () => { active = false; };
+    }
+
+    async function loadRewards() {
+      setRewardsLoading(true);
+      try {
+        const items = await fetchRewards();
+        if (!active) return;
+        setRewardSnapshot({ owner, items });
+        setRewardsError(null);
+      } catch (cause) {
+        if (!active) return;
+        // Keep the preset goals on screen while the connection/table is unavailable.
+        setRewardSnapshot(current => current?.owner === owner ? current : { owner, items: presetRewardsFor(owner) });
+        setRewardsError(cause instanceof Error ? cause.message : 'Rewards could not load. Check your connection.');
+      } finally {
+        if (active) setRewardsLoading(false);
+      }
+    }
+
+    void loadRewards();
+    const unsubscribe = subscribeToRewardChanges(owner, () => void loadRewards());
+    const appState = AppState.addEventListener('change', state => {
+      if (state === 'active') void loadRewards();
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+      appState.remove();
+    };
+  }, [owner]);
+
+  // Presets render immediately while Supabase responds.
+  const allRewards = rewardSnapshot?.owner === owner ? rewardSnapshot.items : presetRewardsFor(owner);
+  const rewards = allRewards.filter(reward => rewardAppliesToChild(reward, ownerOfTasks));
+
+  async function saveReward(draft: RewardDraft, id?: string): Promise<string> {
+    if (!owner) throw new Error('Log in to save rewards.');
+    const validation = validateRewardDraft(draft);
+    if (validation) throw new Error(validation);
+    const targetIds = [...new Set(draft.childIds)];
+    if (targetIds.length > 0 && accounts.role !== 'parent') {
+      throw new Error('Only a parent can choose child profiles.');
+    }
+    if (targetIds.some(childId => !profiles.some(profile => profile.id === childId))) {
+      throw new Error('Choose one of your own child profiles.');
+    }
+    if (id && !allRewards.some(reward => reward.id === id)) throw new Error('Reward not found.');
+
+    const saved = id ? await updateReward(id, draft) : await insertReward(owner, draft);
+    setRewardSnapshot(current => {
+      const items = current?.owner === owner ? current.items : allRewards;
+      return {
+        owner,
+        items: id ? items.map(reward => (reward.id === saved.id ? saved : reward)) : [...items, saved],
+      };
+    });
+    setRewardsError(null);
+    return saved.id;
+  }
+
+  async function removeReward(id: string): Promise<void> {
+    if (!owner) throw new Error('Log in to remove rewards.');
+    if (!allRewards.some(reward => reward.id === id)) throw new Error('Reward not found.');
+    await deleteRewardRow(id);
+    setRewardSnapshot(current => {
+      const items = current?.owner === owner ? current.items : allRewards;
+      return { owner, items: items.filter(reward => reward.id !== id) };
+    });
+    setRewardsError(null);
+  }
 
   const user: User | null = accounts.userId && accounts.role ? {
     id: accounts.userId, email: '', name: accounts.fullName, preferredName: accounts.preferredName,
@@ -62,7 +155,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setSelection({ userId: accounts.userId, childId: id });
   }
 
-  return <DashboardContext.Provider value={{ user, children: profiles, child, tasks, routines, rewards, chooseChild }}>
+  return <DashboardContext.Provider value={{
+    user, children: profiles, child, tasks, routines, rewards, rewardsLoading, rewardsError,
+    chooseChild, saveReward, removeReward,
+  }}>
     {children}
   </DashboardContext.Provider>;
 }

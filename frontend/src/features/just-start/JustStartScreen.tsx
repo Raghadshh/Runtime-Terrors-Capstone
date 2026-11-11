@@ -60,7 +60,10 @@ export default function JustStartScreen({ taskId, childView = false }: { taskId:
       setError(null);
       await setDone(task!.id, today, true);
       timer.reset();
-      router.replace({ pathname: "/tasks/complete", params: { id: task!.id } });
+      router.replace({
+        pathname: "/tasks/complete",
+        params: childView ? { id: task!.id, childView: "1" } : { id: task!.id },
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "That change was not saved. Try again.");
     }
