@@ -2,6 +2,7 @@
  * Bottom navigation for the five dashboard tabs, and the active tab uses sprout green.
  */
 import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { HomeIcon, ProgressIcon, ProfileIcon, RoutinesIcon, TasksIcon } from "@/components/icons";
 
@@ -45,5 +46,25 @@ export function RemindTabBar({ state, navigation }: TabBarProps) {
         );
       })}
     </View>
+  );
+}
+
+const dashboardRoutes = tabs.map(tab => ({ name: tab.name, key: tab.name }));
+
+/** Bottom navigation for routes that are not the Home route bridge. */
+export function DashboardTabBar({ activeIndex }: { activeIndex: number }) {
+  const router = useRouter();
+  function navigate(name: string) {
+    if (name === "home") router.push("/home");
+    else if (name === "tasks") router.push("/tasks");
+    else if (name === "routines") router.push("/routines");
+    else if (name === "progress") router.push("/progress");
+    else if (name === "profile") router.push("/profile");
+  }
+  return (
+    <RemindTabBar
+      state={{ index: activeIndex, routes: dashboardRoutes }}
+      navigation={{ navigate }}
+    />
   );
 }

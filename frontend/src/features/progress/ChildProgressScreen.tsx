@@ -1,39 +1,71 @@
 /**
- * Child Progress Screen for Parents (Figma Screen 38 & 39)
- * Full-screen encouragement modal with dynamic history tracking.
+ * Parent progress overview (Figma screen 26) with the reward goal shortcut.
+ * The encouragement composer from Figma screens 38 & 39 stays available from the header,
+ * and the F5 progress cards come from the shared <ProgressOverview />.
  */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "expo-router";
-import { Text, View, ScrollView, Modal, TextInput, Pressable } from "react-native";
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Header } from "@/components/header";
 import { Button } from "@/components/button";
 import { Card } from "@/components/card";
-import { Screen } from "@/components/screen";
+import { CheckIcon, StarIcon } from "@/components/icons";
 import { ProgressBar } from "@/components/progress";
+import { Screen } from "@/components/screen";
 import { useMine } from "@/lib/dashboard";
+import {
+  nextReward,
+  pointsUntilReward,
+  rewardProgressPercent,
+} from "@/features/progress/rewardRules";
+
 import { ProgressOverview } from "./ProgressOverview";
 
-export default function ChildProgressScreen() {
+export default function ChildProgressScreen({ bottomBar }: { bottomBar?: ReactNode }) {
   const router = useRouter();
-  const { child } = useMine();
-  
+  const mine = useMine();
+  const child = mine.child;
+  const tasks = mine.tasks ?? [];
+  const routines = mine.routines ?? [];
+  const rewards = mine.rewards ?? [];
+  const points = mine.user?.points ?? 0;
+
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedType, setSelectedType] = useState<'nice' | 'keep' | 'proud'>('nice');
-  const [message, setMessage] = useState('You stayed focused on your routine today.\nThat was a strong effort.');
-  
-  // Dynamic history state that updates live when you send encouragement
+  const [selectedType, setSelectedType] = useState<"nice" | "keep" | "proud">("nice");
+  const [message, setMessage] = useState("You stayed focused on your routine today.\nThat was a strong effort.");
+
+  // Dynamic history state that updates live when you send encouragement.
   const [history, setHistory] = useState([
     { text: "“Nice work on your morning routine.”", time: "Sent yesterday at 7:30 AM", bgClass: "bg-[#E6F0E4]" },
     { text: "“Keep going — one step at a time.”", time: "Sent Monday at 4:10 PM", bgClass: "bg-[#E4EFE4]" },
   ]);
 
-  // F5: real task and routine progress now comes from <ProgressOverview /> below.
+  const completedTasksCount = tasks.filter((task) => task.completed).length;
+  const totalTasksCount = tasks.length;
+  const completedRoutinesCount = routines.filter((routine) => routine.status === "complete").length;
+  const activeRoutinesCount = routines.filter((routine) => routine.status === "active" || routine.status === "ready").length;
 
-  const currentPoints = 170;
-  const targetPoints = 200;
-  const rewardPercent = Math.min(100, Math.round((currentPoints / targetPoints) * 100));
-  const activeRewardName = "Movie Night";
-  const pointsNeeded = Math.max(0, targetPoints - currentPoints);
+  // F10: the next reward comes from live Supabase reward data and the current points balance.
+  const goal = nextReward(rewards, points);
+  const pointsNeeded = goal ? pointsUntilReward(goal, points) : 0;
+  const rewardPercent = goal ? rewardProgressPercent(goal, points) : 100;
+
+  const completedTaskWithTime = [...tasks]
+    .filter((task) => task.completed && task.completedAt)
+    .sort((a, b) => String(b.completedAt).localeCompare(String(a.completedAt)))[0];
+  const completedRoutine = routines.find((routine) => routine.status === "complete");
+  const recentTitle = completedTaskWithTime
+    ? `${completedTaskWithTime.title} completed`
+    : completedRoutine
+      ? `${completedRoutine.name} completed`
+      : "No progress logged yet";
+  const recentTime = completedTaskWithTime?.completedAt
+    ? `Today at ${new Date(completedTaskWithTime.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+    : "Today";
+
+  const streak = Math.max(1, new Set(tasks.filter((task) => task.completedAt).map((task) => new Date(task.completedAt!).toDateString())).size);
+  const taskSummary = completedTasksCount === 1 ? "1 task completed" : `${completedTasksCount} tasks completed`;
+  const routineSummary = routines.length === 0 ? "No routines yet" : `${activeRoutinesCount} in progress`;
 
   const handleSend = () => {
     const newEntry = {
@@ -46,10 +78,10 @@ export default function ChildProgressScreen() {
   };
 
   return (
-    <Screen>
-      <Header title="Child Progress" />
-      
-      {/* Selected Child Header Card with Compact Change Button */}
+    <Screen bottomBar={bottomBar}>
+      <Header title="Progress" right="Encourage" onRight={() => setModalVisible(true)} />
+
+      {/* Selected child header card with a compact Change button. */}
       <View className="mb-4 flex-row items-center justify-between rounded-[16px] bg-white p-4 shadow-sm">
         <View>
           <Text className="font-body text-[11px] text-mist">Selected child</Text>
@@ -61,33 +93,92 @@ export default function ChildProgressScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-        {/* F5 (R19, R20): consistency, this week, all-time totals, weekly activity, recently completed */}
+        {/* F10: this week at a glance. */}
+        <View className="mb-3 overflow-hidden rounded-[20px] px-5 py-5" style={{ backgroundColor: "#E5EFF6" }}>
+          <Text className="font-body text-[11px] tracking-[1.5px] text-ink">THIS WEEK</Text>
+          <Text className="mt-2 font-strong text-[20px] leading-[27px] text-ink">
+            You're building momentum {"\n"}{streak} day streak
+          </Text>
+          <Text className="mt-2 font-body text-[13px] text-ink">{taskSummary}</Text>
+        </View>
+
+        <View className="mb-3 flex-row gap-3">
+          <View className="flex-1 rounded-[20px] bg-white p-4">
+            <Text className="font-body text-[12px] text-ink">Tasks today</Text>
+            <Text className="mt-2 font-strong text-[23px] text-ink">{completedTasksCount}/{totalTasksCount}</Text>
+          </View>
+          <View className="flex-1 rounded-[20px] bg-white p-4">
+            <Text className="font-body text-[12px] text-ink">Routines</Text>
+            <Text className="mt-2 font-strong text-[23px] text-ink">{completedRoutinesCount}/{routines.length}</Text>
+            <Text className="mt-1 font-body text-[11px] text-mist">{routineSummary}</Text>
+          </View>
+        </View>
+
+        {/* F5 (R19, R20): consistency, this week, all-time totals, weekly activity, recently completed. */}
         <ProgressOverview ownerId={child?.id ?? null} />
 
-        {/* Reward Progress Card */}
+        <Text className="mb-2 font-strong text-[14px] text-ink">Recent progress</Text>
+        <View className="mb-3 flex-row items-center rounded-[20px] px-4 py-3" style={{ backgroundColor: "#EAF2E6" }}>
+          <View className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-white">
+            <CheckIcon size={16} />
+          </View>
+          <View className="flex-1">
+            <Text className="font-strong text-[14px] text-ink">{recentTitle}</Text>
+            <Text className="mt-1 font-body text-[11px] text-mist">{recentTime}</Text>
+          </View>
+        </View>
+
+        {/* F10: live reward progress from the next reward goal. */}
         <Card className="mb-4">
-          <Text className="font-strong text-[13px] text-ink">Reward progress</Text>
-          <View className="my-2">
+          <View className="flex-row items-center">
+            <StarIcon size={22} />
+            <View className="ml-3 flex-1">
+              <Text className="font-strong text-[14px] text-ink">
+                {goal ? "Reward goal is close" : "All reward goals unlocked"}
+              </Text>
+              <Text className="mt-1 font-body text-[12px] text-ink">
+                {goal ? `${pointsNeeded} points to ${goal.name}` : `${points} points earned`}
+              </Text>
+            </View>
+          </View>
+          <View className="mt-3">
             <ProgressBar percent={rewardPercent} />
           </View>
-          <Text className="font-body text-[12px] text-mist">
-            {currentPoints} / {targetPoints} points • {pointsNeeded} points until {activeRewardName}
+          <Text className="mt-2 font-body text-[11px] text-mist">
+            {goal ? `${points} of ${goal.points} points` : `${points} points earned`}
           </Text>
         </Card>
 
-        {/* Send Encouragement Action */}
-        <View className="mt-2">
+        <View className="mb-2">
           <Button label="Send Encouragement" onPress={() => setModalVisible(true)} />
+        </View>
+
+        <View className="flex-row gap-3">
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/progress/rewards")}
+            className="h-11 flex-1 items-center justify-center rounded-[14px]"
+            style={{ backgroundColor: "#E9F1E5", borderWidth: 1, borderColor: "#BCD0BB" }}
+          >
+            <Text className="font-strong text-[14px] text-ink">View Rewards</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => Alert.alert("Garden", "The garden is growing soon.")}
+            className="h-11 flex-1 items-center justify-center rounded-[14px]"
+            style={{ backgroundColor: "#E5EFF5", borderWidth: 1, borderColor: "#BCD0BB" }}
+          >
+            <Text className="font-strong text-[14px] text-ink">Visit Garden</Text>
+          </Pressable>
         </View>
       </ScrollView>
 
-      {/* Full-Screen Encouragement Modal (Figma Screen 39) */}
+      {/* Full-screen encouragement composer (Figma Screen 39). */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="fullScreen">
         <Screen>
           <Header title="Send Encouragement" />
-          
+
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 36 }}>
-            {/* Top Bar with Close */}
             <View className="mb-4 flex-row items-center justify-between">
               <View className="flex-1 rounded-[16px] bg-white p-4 shadow-sm">
                 <Text className="font-body text-[11px] text-mist">Selected child</Text>
@@ -98,44 +189,42 @@ export default function ChildProgressScreen() {
               </Pressable>
             </View>
 
-            {/* Choose Encouragement Cards */}
             <Card className="mb-4">
               <Text className="mb-3 font-strong text-[13px] text-ink">Choose encouragement</Text>
               <View className="flex-row gap-2">
-                <Pressable 
+                <Pressable
                   onPress={() => {
-                    setSelectedType('nice');
-                    setMessage('Nice work on your routine today!');
+                    setSelectedType("nice");
+                    setMessage("Nice work on your routine today!");
                   }}
-                  className={`flex-1 rounded-[14px] p-3 items-center ${selectedType === 'nice' ? 'border-[1.5px] border-leaf bg-[#FFFCEB]' : 'border border-mist/30 bg-white'}`}
+                  className={`flex-1 items-center rounded-[14px] p-3 ${selectedType === "nice" ? "border-[1.5px] border-leaf bg-[#FFFCEB]" : "border border-mist/30 bg-white"}`}
                 >
-                  <Text className="font-strong text-ink text-[12px]">Nice work</Text>
+                  <Text className="font-strong text-[12px] text-ink">Nice work</Text>
                   <Text className="text-[10px] text-mist">Warm praise</Text>
                 </Pressable>
-                <Pressable 
+                <Pressable
                   onPress={() => {
-                    setSelectedType('keep');
-                    setMessage('Keep going — one step at a time.');
+                    setSelectedType("keep");
+                    setMessage("Keep going — one step at a time.");
                   }}
-                  className={`flex-1 rounded-[14px] p-3 items-center ${selectedType === 'keep' ? 'border-[1.5px] border-leaf bg-[#FFFCEB]' : 'border border-mist/30 bg-white'}`}
+                  className={`flex-1 items-center rounded-[14px] p-3 ${selectedType === "keep" ? "border-[1.5px] border-leaf bg-[#FFFCEB]" : "border border-mist/30 bg-white"}`}
                 >
-                  <Text className="font-strong text-ink text-[12px]">Keep going</Text>
+                  <Text className="font-strong text-[12px] text-ink">Keep going</Text>
                   <Text className="text-[10px] text-mist">Supportive</Text>
                 </Pressable>
-                <Pressable 
+                <Pressable
                   onPress={() => {
-                    setSelectedType('proud');
-                    setMessage('Proud of you! Excellent effort.');
+                    setSelectedType("proud");
+                    setMessage("Proud of you! Excellent effort.");
                   }}
-                  className={`flex-1 rounded-[14px] p-3 items-center ${selectedType === 'proud' ? 'border-[1.5px] border-leaf bg-[#FFFCEB]' : 'border border-mist/30 bg-white'}`}
+                  className={`flex-1 items-center rounded-[14px] p-3 ${selectedType === "proud" ? "border-[1.5px] border-leaf bg-[#FFFCEB]" : "border border-mist/30 bg-white"}`}
                 >
-                  <Text className="font-strong text-ink text-[12px]">Proud of you</Text>
+                  <Text className="font-strong text-[12px] text-ink">Proud of you</Text>
                   <Text className="text-[10px] text-mist">Celebrate</Text>
                 </Pressable>
               </View>
             </Card>
 
-            {/* Optional Message Card */}
             <Card className="mb-4">
               <Text className="mb-2 font-strong text-[13px] text-ink">Optional message</Text>
               <TextInput
@@ -150,12 +239,10 @@ export default function ChildProgressScreen() {
               <Text className="mt-1 text-right font-body text-[11px] text-mist">{message.length} / 120</Text>
             </Card>
 
-            {/* Send Button */}
             <View className="mb-6">
               <Button label={`Send to ${child?.name ?? "Alex"}`} onPress={handleSend} />
             </View>
 
-            {/* Recent Encouragement History Section */}
             <Text className="mb-3 font-strong text-[14px] text-ink">Recent encouragement</Text>
             <View className="gap-3">
               {history.map((item, index) => (

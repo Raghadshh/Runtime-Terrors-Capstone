@@ -123,7 +123,7 @@ export default function TaskDetailScreen({
       if (!finishedToday) {
         router.push({
           pathname: "/tasks/complete",
-          params: { id: task!.id },
+          params: childView ? { id: task!.id, childView: "1" } : { id: task!.id },
         });
       }
     } catch (cause) {
@@ -175,7 +175,7 @@ export default function TaskDetailScreen({
   }
 
   return (
-    <Screen bottomBar={<TaskNavigation />}>
+    <Screen bottomBar={childView ? undefined : <TaskNavigation />}>
       <Header title="Task Details" />
 
       <View

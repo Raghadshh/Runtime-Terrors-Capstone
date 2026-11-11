@@ -124,6 +124,18 @@ describe('Just Start screen (TC-304)', () => {
     expect(getTaskTimer(task).status).toBe(TimerStatus.RUNNING);
     expect(mockReplace).toHaveBeenCalledWith('/tasks/t1?childView=1');
   });
+
+  test('child completion keeps the child context on the celebration screen', async () => {
+    await render(<JustStartScreen taskId="t1" childView />);
+    await act(async () => {
+      jest.advanceTimersByTime(5 * 60 * 1000 + 1000);
+    });
+    await fireEvent.press(screen.getByRole('button', { name: 'Mark Complete' }));
+    expect(mockReplace).toHaveBeenCalledWith({
+      pathname: '/tasks/complete',
+      params: { id: 't1', childView: '1' },
+    });
+  });
 });
 
 describe('Just Start button on task details', () => {

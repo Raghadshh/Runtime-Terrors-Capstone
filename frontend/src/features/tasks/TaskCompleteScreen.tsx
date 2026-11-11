@@ -7,12 +7,14 @@ import { dashboardArt } from "@assets/illustration";
 import { Button } from "@/components/button";
 import { Header } from "@/components/header";
 import { Screen } from "@/components/screen";
+import { useMine } from "@/lib/dashboard";
 import { useTasks } from "./TasksContext";
 import { completionKey } from "./taskRules";
 import { requireSupabase } from "../accounts/supabase";
 
-export default function TaskCompleteScreen({ taskId: propsTaskId }: { taskId?: string }) {
+export default function TaskCompleteScreen({ taskId: propsTaskId, childView = false }: { taskId?: string; childView?: boolean }) {
   const router = useRouter();
+  const { child } = useMine();
   
   let params: { taskId?: string; id?: string } = {};
   try {
@@ -31,7 +33,10 @@ export default function TaskCompleteScreen({ taskId: propsTaskId }: { taskId?: s
   const [uploaded, setUploaded] = useState(false);
 
   if (loading) return <Screen><Text>Loading…</Text></Screen>;
-  if (!task || !done.has(completionKey(taskId!, today))) return <Redirect href="/tasks" />;
+  const childHome = child ? `/child?id=${child.id}` : "/home";
+  if (!task || !done.has(completionKey(taskId!, today))) {
+    return <Redirect href={childView ? childHome : "/tasks"} />;
+  }
 
   const requiresPhoto = Boolean(
     task.requiresPhoto || 
@@ -150,8 +155,14 @@ export default function TaskCompleteScreen({ taskId: propsTaskId }: { taskId?: s
             />
           ) : null}
 
-          <Button label="Back to Tasks" variant={requiresPhoto && !uploaded ? "secondary" : "primary"} onPress={() => router.replace("/tasks")} />
-          <Button label="Go Home" variant="secondary" onPress={() => router.replace("/home")} />
+          <Button
+            label={childView ? "Back to Today" : "Back to Tasks"}
+            variant={requiresPhoto && !uploaded ? "secondary" : "primary"}
+            onPress={() => router.replace(childView ? childHome : "/tasks")}
+          />
+          {!childView ? (
+            <Button label="Go Home" variant="secondary" onPress={() => router.replace("/home")} />
+          ) : null}
         </View>
       </View>
     </Screen>

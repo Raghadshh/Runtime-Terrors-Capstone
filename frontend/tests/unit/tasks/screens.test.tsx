@@ -88,14 +88,26 @@ test('undo saves without celebrating and completed task has working return actio
   expect(mockReplace).toHaveBeenCalledWith('/home');
 });
 
+test('child completion returns to the child dashboard without parent actions', async () => {
+  (useMine as jest.Mock).mockReturnValue({ user: { accountType: 'parent' }, child: { id: 'c1', name: 'Sam' }, children: [], tasks: [base] });
+  (useTasks as jest.Mock).mockReturnValue({ tasks: [base], done: new Set([completionKey(base.id, today)]), today, setDone, loading: false });
+  await render(<TaskCompleteScreen taskId="today" childView />);
+  expect(screen.queryByRole('button', { name: 'Go Home' })).toBeNull();
+  await fireEvent.press(screen.getByRole('button', { name: 'Back to Today' }));
+  expect(mockReplace).toHaveBeenCalledWith('/child?id=c1');
+  expect(mockReplace).not.toHaveBeenCalledWith('/tasks');
+});
+
 test('child task details hide management controls but allow completion and timer use', async () => {
   await render(<TaskDetailScreen taskId="today" childView />);
   expect(screen.queryByRole('button', { name: 'Edit Task' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Delete Task' })).toBeNull();
+  expect(screen.queryByText('Home')).toBeNull();
   expect(screen.getByRole('button', { name: 'Mark Complete' })).toBeEnabled();
   expect(screen.getByText('Timer')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Mark Complete' }));
   expect(setDone).toHaveBeenCalledWith('today', today, true);
+  expect(mockPush).toHaveBeenCalledWith({ pathname: '/tasks/complete', params: { id: 'today', childView: '1' } });
 });
 
 test.each(['parent', 'independent'])('%s task details retain management controls', async accountType => {
