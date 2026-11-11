@@ -1,6 +1,7 @@
 /**
  * Parent progress overview (Figma screen 26) with the reward goal shortcut.
- * The encouragement composer from Figma screens 38 & 39 stays available from the header.
+ * The encouragement composer from Figma screens 38 & 39 stays available from the header,
+ * and the F5 progress cards come from the shared <ProgressOverview />.
  */
 import { useState, type ReactNode } from "react";
 import { useRouter } from "expo-router";
@@ -9,9 +10,16 @@ import { Header } from "@/components/header";
 import { Button } from "@/components/button";
 import { Card } from "@/components/card";
 import { CheckIcon, StarIcon } from "@/components/icons";
+import { ProgressBar } from "@/components/progress";
 import { Screen } from "@/components/screen";
 import { useMine } from "@/lib/dashboard";
-import { nextReward, pointsUntilReward } from "@/features/progress/rewardRules";
+import {
+  nextReward,
+  pointsUntilReward,
+  rewardProgressPercent,
+} from "@/features/progress/rewardRules";
+
+import { ProgressOverview } from "./ProgressOverview";
 
 export default function ChildProgressScreen({ bottomBar }: { bottomBar?: ReactNode }) {
   const router = useRouter();
@@ -32,28 +40,15 @@ export default function ChildProgressScreen({ bottomBar }: { bottomBar?: ReactNo
     { text: "“Keep going — one step at a time.”", time: "Sent Monday at 4:10 PM", bgClass: "bg-[#E4EFE4]" },
   ]);
 
-  const completedTasksCount = tasks.filter((t) => t.completed).length;
+  const completedTasksCount = tasks.filter((task) => task.completed).length;
   const totalTasksCount = tasks.length;
-  const completedRoutinesCount = routines.filter((r) => r.status === "complete").length;
-  const activeRoutinesCount = routines.filter((r) => r.status === "active" || r.status === "ready").length;
+  const completedRoutinesCount = routines.filter((routine) => routine.status === "complete").length;
+  const activeRoutinesCount = routines.filter((routine) => routine.status === "active" || routine.status === "ready").length;
 
+  // F10: the next reward comes from live Supabase reward data and the current points balance.
   const goal = nextReward(rewards, points);
   const pointsNeeded = goal ? pointsUntilReward(goal, points) : 0;
-
-  const daysOfWeek = ["M", "T", "W", "T", "F", "S", "S"];
-  const weeklyBars = daysOfWeek.map((dayLabel, index) => {
-    const dayCompletedCount = tasks.filter((t) => {
-      if (!t.completedAt) return false;
-      const taskDayIndex = new Date(t.completedAt).getDay();
-      const adjustedIndex = taskDayIndex === 0 ? 6 : taskDayIndex - 1;
-      return adjustedIndex === index;
-    }).length;
-    return {
-      day: dayLabel,
-      height: Math.min(Math.max(dayCompletedCount * 15, 25), 90),
-      count: dayCompletedCount,
-    };
-  });
+  const rewardPercent = goal ? rewardProgressPercent(goal, points) : 100;
 
   const completedTaskWithTime = [...tasks]
     .filter((task) => task.completed && task.completedAt)
@@ -68,7 +63,7 @@ export default function ChildProgressScreen({ bottomBar }: { bottomBar?: ReactNo
     ? `Today at ${new Date(completedTaskWithTime.completedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
     : "Today";
 
-  const streak = Math.max(1, new Set(tasks.filter(t => t.completedAt).map(t => new Date(t.completedAt!).toDateString())).size);
+  const streak = Math.max(1, new Set(tasks.filter((task) => task.completedAt).map((task) => new Date(task.completedAt!).toDateString())).size);
   const taskSummary = completedTasksCount === 1 ? "1 task completed" : `${completedTasksCount} tasks completed`;
   const routineSummary = routines.length === 0 ? "No routines yet" : `${activeRoutinesCount} in progress`;
 
@@ -86,79 +81,97 @@ export default function ChildProgressScreen({ bottomBar }: { bottomBar?: ReactNo
     <Screen bottomBar={bottomBar}>
       <Header title="Progress" right="Encourage" onRight={() => setModalVisible(true)} />
 
-      <View className="mb-3 overflow-hidden rounded-[20px] px-5 py-5" style={{ backgroundColor: "#E5EFF6" }}>
-        <Text className="font-body text-[11px] tracking-[1.5px] text-ink">THIS WEEK</Text>
-        <Text className="mt-2 font-strong text-[20px] leading-[27px] text-ink">
-          You're building momentum {"\n"}{streak} day streak
-        </Text>
-        <Text className="mt-2 font-body text-[13px] text-ink">{taskSummary}</Text>
-      </View>
-
-      <View className="mb-3 flex-row gap-3">
-        <View className="flex-1 rounded-[20px] bg-white p-4">
-          <Text className="font-body text-[12px] text-ink">Tasks today</Text>
-          <Text className="mt-2 font-strong text-[23px] text-ink">{completedTasksCount}/{totalTasksCount}</Text>
+      {/* Selected child header card with a compact Change button. */}
+      <View className="mb-4 flex-row items-center justify-between rounded-[16px] bg-white p-4 shadow-sm">
+        <View>
+          <Text className="font-body text-[11px] text-mist">Selected child</Text>
+          <Text className="font-strong text-[18px] text-ink">{child?.name ?? "Alex"}</Text>
         </View>
-        <View className="flex-1 rounded-[20px] bg-white p-4">
-          <Text className="font-body text-[12px] text-ink">Routines</Text>
-          <Text className="mt-2 font-strong text-[23px] text-ink">{completedRoutinesCount}/{routines.length}</Text>
-          <Text className="mt-1 font-body text-[11px] text-mist">{routineSummary}</Text>
+        <View className="w-[100px]">
+          <Button label="Change" variant="secondary" onPress={() => router.push("/choose-child")} />
         </View>
       </View>
 
-      <Card className="mb-3">
-        <Text className="font-strong text-[13px] text-ink">Weekly activity</Text>
-        <View className="flex-row items-end justify-between px-2 pt-5" style={{ height: 116 }}>
-          {weeklyBars.map((bar, idx) => (
-            <View key={idx} className="items-center">
-              <View className="w-[26px] rounded-t-[6px]" style={{ height: bar.height, backgroundColor: "#6A9A78" }} />
-              <Text className="mt-2 font-strong text-[11px] text-mist">{bar.day}</Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+        {/* F10: this week at a glance. */}
+        <View className="mb-3 overflow-hidden rounded-[20px] px-5 py-5" style={{ backgroundColor: "#E5EFF6" }}>
+          <Text className="font-body text-[11px] tracking-[1.5px] text-ink">THIS WEEK</Text>
+          <Text className="mt-2 font-strong text-[20px] leading-[27px] text-ink">
+            You're building momentum {"\n"}{streak} day streak
+          </Text>
+          <Text className="mt-2 font-body text-[13px] text-ink">{taskSummary}</Text>
+        </View>
+
+        <View className="mb-3 flex-row gap-3">
+          <View className="flex-1 rounded-[20px] bg-white p-4">
+            <Text className="font-body text-[12px] text-ink">Tasks today</Text>
+            <Text className="mt-2 font-strong text-[23px] text-ink">{completedTasksCount}/{totalTasksCount}</Text>
+          </View>
+          <View className="flex-1 rounded-[20px] bg-white p-4">
+            <Text className="font-body text-[12px] text-ink">Routines</Text>
+            <Text className="mt-2 font-strong text-[23px] text-ink">{completedRoutinesCount}/{routines.length}</Text>
+            <Text className="mt-1 font-body text-[11px] text-mist">{routineSummary}</Text>
+          </View>
+        </View>
+
+        {/* F5 (R19, R20): consistency, this week, all-time totals, weekly activity, recently completed. */}
+        <ProgressOverview ownerId={child?.id ?? null} />
+
+        <Text className="mb-2 font-strong text-[14px] text-ink">Recent progress</Text>
+        <View className="mb-3 flex-row items-center rounded-[20px] px-4 py-3" style={{ backgroundColor: "#EAF2E6" }}>
+          <View className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-white">
+            <CheckIcon size={16} />
+          </View>
+          <View className="flex-1">
+            <Text className="font-strong text-[14px] text-ink">{recentTitle}</Text>
+            <Text className="mt-1 font-body text-[11px] text-mist">{recentTime}</Text>
+          </View>
+        </View>
+
+        {/* F10: live reward progress from the next reward goal. */}
+        <Card className="mb-4">
+          <View className="flex-row items-center">
+            <StarIcon size={22} />
+            <View className="ml-3 flex-1">
+              <Text className="font-strong text-[14px] text-ink">
+                {goal ? "Reward goal is close" : "All reward goals unlocked"}
+              </Text>
+              <Text className="mt-1 font-body text-[12px] text-ink">
+                {goal ? `${pointsNeeded} points to ${goal.name}` : `${points} points earned`}
+              </Text>
             </View>
-          ))}
-        </View>
-      </Card>
-
-      <Text className="mb-2 font-strong text-[14px] text-ink">Recent progress</Text>
-      <View className="mb-3 flex-row items-center rounded-[20px] px-4 py-3" style={{ backgroundColor: "#EAF2E6" }}>
-        <View className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-white">
-          <CheckIcon size={16} />
-        </View>
-        <View className="flex-1">
-          <Text className="font-strong text-[14px] text-ink">{recentTitle}</Text>
-          <Text className="mt-1 font-body text-[11px] text-mist">{recentTime}</Text>
-        </View>
-      </View>
-
-      <View className="mb-4 flex-row items-center rounded-[20px] px-4 py-3" style={{ backgroundColor: "#F5E0DB" }}>
-        <StarIcon size={22} />
-        <View className="ml-3 flex-1">
-          <Text className="font-strong text-[14px] text-ink">
-            {goal ? "Reward goal is close" : "All reward goals unlocked"}
+          </View>
+          <View className="mt-3">
+            <ProgressBar percent={rewardPercent} />
+          </View>
+          <Text className="mt-2 font-body text-[11px] text-mist">
+            {goal ? `${points} of ${goal.points} points` : `${points} points earned`}
           </Text>
-          <Text className="mt-1 font-body text-[12px] text-ink">
-            {goal ? `${pointsNeeded} points to ${goal.name}` : `${points} points earned`}
-          </Text>
-        </View>
-      </View>
+        </Card>
 
-      <View className="flex-row gap-3">
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push("/progress/rewards")}
-          className="h-11 flex-1 items-center justify-center rounded-[14px]"
-          style={{ backgroundColor: "#E9F1E5", borderWidth: 1, borderColor: "#BCD0BB" }}
-        >
-          <Text className="font-strong text-[14px] text-ink">View Rewards</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => Alert.alert("Garden", "The garden is growing soon.")}
-          className="h-11 flex-1 items-center justify-center rounded-[14px]"
-          style={{ backgroundColor: "#E5EFF5", borderWidth: 1, borderColor: "#BCD0BB" }}
-        >
-          <Text className="font-strong text-[14px] text-ink">Visit Garden</Text>
-        </Pressable>
-      </View>
+        <View className="mb-2">
+          <Button label="Send Encouragement" onPress={() => setModalVisible(true)} />
+        </View>
+
+        <View className="flex-row gap-3">
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/progress/rewards")}
+            className="h-11 flex-1 items-center justify-center rounded-[14px]"
+            style={{ backgroundColor: "#E9F1E5", borderWidth: 1, borderColor: "#BCD0BB" }}
+          >
+            <Text className="font-strong text-[14px] text-ink">View Rewards</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => Alert.alert("Garden", "The garden is growing soon.")}
+            className="h-11 flex-1 items-center justify-center rounded-[14px]"
+            style={{ backgroundColor: "#E5EFF5", borderWidth: 1, borderColor: "#BCD0BB" }}
+          >
+            <Text className="font-strong text-[14px] text-ink">Visit Garden</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
 
       {/* Full-screen encouragement composer (Figma Screen 39). */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="fullScreen">
