@@ -25,16 +25,21 @@ We set up the repository, Expo app, branch workflow, initial documentation, and 
 - Task reminder scheduling code. Notification delivery still needs device testing in a development build; Android Expo Go skips this integration.
 - Password validation and hiding task edit/delete controls when tasks are opened from the child dashboard.
 
-Points, rewards, and garden totals shown in the dashboard are not a finished reward system yet.
+### Sprint 2 — Done
 
-### Sprint 2 — In progress
+- **F1 — Tasks/Reminders (Jeel):** Added routine reminders and task notification navigation. (R10)
+- **F2 — Routine Builder (Raghad):** Added routine creation, editing, step reordering/reuse, assignment, and step completion. (R13, R14, R15, R18)
+- **F3 — Focus Mode (Salena):** Added a view for one current routine step at a time. (R17)
+- **F6 — Routine Templates (Salena):** Added customizable morning, bedtime, and homework templates. (R16)
+- **F7 / F14 — Just Start Mode & Timer (Jeel):** Added short timed sessions to help users get started. (R12)
+- **F9 — Task Breakdown (Nabila):** Added smaller task steps and checklists. (R11)
 
-- **F1 — Tasks/Reminders (Jeel):** Add routine reminders and verify the task reminders from Sprint 1. (R10)
-- **F2 — Routine Builder (Raghad):** Create and manage routines, reorder and reuse steps, assign routines to children, and track step completion. (R13, R14, R15, R18)
-- **F3 — Focus Mode (Salena):** Show one current task or routine step at a time. (R17)
-- **F6 — Routine Templates (Salena):** Add customizable morning, bedtime, and homework templates. (R16)
-- **F7 / F14 — Just Start Mode & Timer (Jeel):** Use the countdown timer for a short session to help users get started. (R12)
-- **F9 — Task Breakdown (Nabila):** Break larger tasks into smaller steps and checklists. (R11)
+### Sprint 3 — In progress
+
+- **F4 — Points & Custom Rewards (Raghad):** Set task/routine points, keep a saved balance for each profile, and redeem rewards using points. Custom reward creation and assignment build on Nabila's work. (R23–R25)
+- **F5 — Habit/Progress Tracker (Jeel):** Show completion history, cumulative progress, and flexible consistency. (R19, R20)
+- **F10 — Rewards work (Nabila):** Create, edit, delete, and assign custom rewards with point costs. XP/levels/achievements remain a separate requirement. (R24)
+- **F18 — Completion Feedback (Salena):** Completion feedback, photo submission and parent review, encouragement, and child dashboard updates. (R33–R35, R37)
 
 ## How the app is organized
 
@@ -45,6 +50,7 @@ The mobile app connects directly to Supabase for authentication and database acc
 - `frontend/src/features/tasks/`: Task screens, repeat rules, saving tasks, and reminder scheduling.
 - `frontend/src/features/timer/`: The shared countdown timer logic and controls.
 - `frontend/src/features/routines/`: Routine screens, validation, Supabase calls, and shared routine state.
+- `frontend/src/features/points/`: Saved point balances, redemption calls, and reward confirmation.
 - `frontend/src/features/child-dashboard/`: Parent, independent, and child dashboard layouts.
 - `frontend/src/shared/components/`: Reusable buttons, cards, navigation, progress bars, and screen layouts.
 - `frontend/src/shared/lib/`: Shared types, formatting, dashboard data, and navigation helpers.

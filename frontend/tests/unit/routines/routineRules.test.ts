@@ -40,3 +40,16 @@ test('maps ordered steps and completion to daily routine progress', () => {
   expect(routineFromRows(row, steps, new Set(['s1','s2'])).status).toBe('complete');
   expect(routineFromRows(row, steps, new Set()).steps.every(step => !step.completed)).toBe(true);
 });
+
+test('routine points accept zero and whole amounts, and reject invalid amounts', () => {
+  for (const points of [0, 25, 1000]) expect(validateRoutine({ ...draft, points })).toBeNull();
+  for (const points of [-1, 1.5, 1001, NaN, Infinity]) {
+    expect(validateRoutine({ ...draft, points })).toBe('Points must be a whole number from 0 to 1000.');
+  }
+});
+
+test('routine points survive loading and editing, including zero', () => {
+  const routine = routineFromRows({ id: 'r', user_id: 'u', child_id: null, name: 'Morning', subtitle: '', days: [0], time: '07:00', points: 0 }, [], new Set());
+  expect(routine.points).toBe(0);
+  expect(routineDraft(routine).points).toBe(0);
+});

@@ -27,7 +27,8 @@ beforeEach(() => { jest.clearAllMocks(); mockError = null; mockRpc.mockResolvedV
 test('saves the whole draft through the atomic database function', async () => {
   await expect(saveRoutineRow({ name: ' Morning ', subtitle: ' Calm ', childId: 'c1', days: [4,0],
     time: '07:00', steps: [{ id: 's1', title: ' Teeth ', minutes: 3 }] }, 'r1')).resolves.toBe('r1');
-  expect(mockRpc).toHaveBeenCalledWith('save_routine', {
+  expect(mockRpc).toHaveBeenCalledWith('save_routine_with_points', {
+    p_points: 10,
     p_id: 'r1', p_name: 'Morning', p_subtitle: 'Calm', p_child_id: 'c1', p_days: [0,4], p_time: '07:00',
     p_steps: [{ id: 's1', title: 'Teeth', minutes: 3 }],
   });
@@ -46,4 +47,9 @@ test('completion is idempotent and undo targets only that step and day', async (
   expect(mockDelete).toHaveBeenCalledTimes(1);
   expect(mockEq).toHaveBeenCalledWith('step_id', 's1');
   expect(mockEq).toHaveBeenCalledWith('occurrence_date', '2026-10-19');
+});
+
+test('passes a custom routine award to the atomic save function', async () => {
+  await saveRoutineRow({ name: 'Routine', subtitle: '', days: [0], time: '07:00', childId: null, steps: [], points: 37 });
+  expect(mockRpc).toHaveBeenCalledWith('save_routine_with_points', expect.objectContaining({ p_points: 37 }));
 });

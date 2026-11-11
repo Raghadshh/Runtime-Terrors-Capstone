@@ -79,6 +79,7 @@ export interface RoutineStep {
 }
 
 export interface Routine {
+  points?: number;
   id: string;
   userId: string;
   childId: string | null;

@@ -58,6 +58,7 @@ export default function RoutineDetailScreen({ routineId, childView = false }: { 
       <Text style={[s.label, { color: '#2C7A4B', fontSize: 11 }]}>{routine.name.toUpperCase()}</Text>
       <Text style={[s.heading, { fontSize: 23 }]}>{routine.subtitle || routine.name}</Text>
       <Text style={s.muted}>{assigned} · {repeatDays(routine.days)} at {formatClock(routine.time)} · {duration} min</Text>
+      <Text style={s.label}>{routine.points ?? 10} points for completing this routine</Text>
     </View>
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 9 }}>
       <Text style={s.heading}>Progress</Text><Text style={[s.label, { color: '#2C7A4B' }]}>{done} of {routine.steps.length} steps</Text>

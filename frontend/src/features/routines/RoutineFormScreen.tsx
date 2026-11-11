@@ -85,6 +85,7 @@ function RoutineForm({ routineId, templateId, initial }: { routineId?: string; t
     }
   }, [child?.id, parent, draft.childId]);
 
+  const [pointsText, setPointsText] = useState(String(initial?.points ?? 10));
   const [editing, setEditing] = useState<StepDraft | null>(null);
   const [stepMinutes, setStepMinutes] = useState('');
   const [reusing, setReusing] = useState(false);
@@ -124,12 +125,14 @@ function RoutineForm({ routineId, templateId, initial }: { routineId?: string; t
 
   async function save() {
     if (busy) return;
-    const validation = validateRoutine(draft);
+    if (!/^\d+$/.test(pointsText)) { setError('Points must be a whole number from 0 to 1000.'); return; }
+    const form = { ...draft, points: Number(pointsText) };
+    const validation = validateRoutine(form);
     if (validation) { setError(validation); return; }
     if (parent && !draft.childId) { setError('Choose a child profile for this routine.'); return; }
     setBusy(true); setError(null);
     try {
-      const id = await saveRoutine(draft, routineId);
+      const id = await saveRoutine(form, routineId);
       router.replace('/routines/' + id);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not save your routine.');
@@ -183,6 +186,9 @@ function RoutineForm({ routineId, templateId, initial }: { routineId?: string; t
         ))}
 
         <RoutineAction label="+ Add Step" tint="#DDECF4" secondary disabled={draft.steps.length >= 50} onPress={() => editStep()} />
+
+        <RoutineField label="Points for completing this routine" value={pointsText} keyboardType="number-pad" maxLength={4} onChangeText={setPointsText} />
+        <Text style={s.muted}>Earn these points once all steps are finished for the day.</Text>
 
         <Text style={s.label}>Repeat on</Text>
         <View style={{ flexDirection: 'row', gap: 6 }}>
